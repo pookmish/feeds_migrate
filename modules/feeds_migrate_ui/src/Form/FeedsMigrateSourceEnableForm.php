@@ -1,23 +1,23 @@
 <?php
 
-namespace Drupal\feeds_migrate\Form;
+namespace Drupal\feeds_migrate_ui\Form;
 
 use Drupal\Core\Entity\EntityConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
 /**
- * Class FeedsMigrateImporterDisableForm.
+ * Class FeedsMigrateSourceEnableForm.
  *
- * @package Drupal\feeds_migrate\Form
+ * @package Drupal\feeds_migrate_ui\Form
  */
-class FeedsMigrateImporterDisableForm extends EntityConfirmFormBase {
+class FeedsMigrateSourceEnableForm extends EntityConfirmFormBase {
 
   /**
    * {@inheritdoc}
    */
   public function getQuestion() {
-    return $this->t('Disable %label?', [
+    return $this->t('Enable %label?', [
       '%label' => $this->entity->label(),
     ]);
   }
@@ -26,7 +26,7 @@ class FeedsMigrateImporterDisableForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getDescription() {
-    return $this->t('Disable %label?', [
+    return $this->t('Enable %label?', [
       '%label' => $this->entity->label(),
     ]);
   }
@@ -44,8 +44,7 @@ class FeedsMigrateImporterDisableForm extends EntityConfirmFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     /** @var \Drupal\Core\Config\Entity\ConfigEntityInterface $entity */
     $entity = $this->entity;
-    $entity->disable()->save();
-
+    $entity->enable()->save();
     parent::submitForm($form, $form_state);
     $form_state->setRedirectUrl($this->getCancelUrl());
   }

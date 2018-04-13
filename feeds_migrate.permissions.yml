@@ -1,0 +1,3 @@
+administer feeds migrate importers:
+  title: 'Administer Feeds Migrate Importers'
+  description: 'Add Feeds Migrate Importers.'

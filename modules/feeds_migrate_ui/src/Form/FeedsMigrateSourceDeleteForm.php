@@ -1,17 +1,17 @@
 <?php
 
-namespace Drupal\feeds_migrate\Form;
+namespace Drupal\feeds_migrate_ui\Form;
 
 use Drupal\Core\Entity\EntityConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
 /**
- * Class FeedsMigrateImporterDeleteForm.
+ * Class FeedsMigrateSourceDeleteForm.
  *
- * @package Drupal\feeds_migrate\Form
+ * @package Drupal\feeds_migrate_ui\Form
  */
-class FeedsMigrateImporterDeleteForm extends EntityConfirmFormBase {
+class FeedsMigrateSourceDeleteForm extends EntityConfirmFormBase {
 
   /**
    * {@inheritdoc}
