@@ -5,6 +5,7 @@ namespace Drupal\feeds_migrate\Form;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\migrate_plus\Entity\Migration;
 
 /**
  * Class FeedsMigrateImporterForm.
@@ -42,6 +43,17 @@ class FeedsMigrateImporterForm extends EntityForm {
       '#disabled' => !$entity->isNew(),
     ];
 
+    $sources = [];
+    /** @var Migration $migration */
+    foreach (Migration::loadMultiple() as $migration) {
+      $sources[$migration->id()] = $migration->label();
+    }
+    $form['source'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Migration Source'),
+      '#options' => $sources,
+      '#default_value' => $entity->sources,
+    ];
     return $form;
   }
 

@@ -7,11 +7,11 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
 /**
- * Class FeedsMigrateSourceDisableForm.
+ * Class MigrationDisableForm.
  *
  * @package Drupal\feeds_migrate_ui\Form
  */
-class FeedsMigrateSourceDisableForm extends EntityConfirmFormBase {
+class MigrationDisableForm extends EntityConfirmFormBase {
 
   /**
    * {@inheritdoc}

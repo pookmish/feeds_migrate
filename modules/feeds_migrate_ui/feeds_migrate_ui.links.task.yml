@@ -1,0 +1,11 @@
+entity.feeds_migrate_importer.list:
+  title: 'Importers'
+  route_name: entity.feeds_migrate_importer.collection
+  base_route: entity.feeds_migrate_importer.collection
+
+
+entity.migration.list:
+  title: 'Migration Mappers'
+  route_name: entity.migration.collection
+  base_route: entity.feeds_migrate_importer.collection
+  weight: 100

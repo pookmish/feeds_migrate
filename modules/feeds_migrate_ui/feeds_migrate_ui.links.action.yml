@@ -1,5 +1,5 @@
-entity.feeds_migrate_source.list:
-  route_name: 'entity.migration.collection'
-  title: 'Feeds Migrations'
+entity.feeds_migrate_source.add:
+  route_name: 'entity.migration.add_form'
+  title: 'Add Migration Mapper'
   appears_on:
-    - entity.feeds_migrate_importer.collection
+    - entity.migration.collection

@@ -10,7 +10,7 @@ use Drupal\Core\Entity\EntityInterface;
  *
  * @package Drupal\feeds_migrate
  */
-class FeedsMigrateSourceListBuilder extends ConfigEntityListBuilder {
+class MigrationListBuilder extends ConfigEntityListBuilder {
 
   /**
    * {@inheritdoc}
