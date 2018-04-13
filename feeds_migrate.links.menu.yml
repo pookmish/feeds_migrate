@@ -1,0 +1,5 @@
+entity.feeds_migrate_importer.collection:
+  title: 'Feeds Migrate'
+  route_name: entity.feeds_migrate_importer.collection
+  description: 'View and add Feeds Migrations'
+  parent: system.admin_content

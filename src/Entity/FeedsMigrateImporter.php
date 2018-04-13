@@ -22,6 +22,7 @@ use Drupal\feeds_migrate\FeedsMigrateImporterInterface;
  *     },
  *   },
  *   config_prefix = "importer",
+ *   admin_permission = "administer feeds migrate importers",
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "label",
@@ -37,5 +38,19 @@ use Drupal\feeds_migrate\FeedsMigrateImporterInterface;
  * )
  */
 class FeedsMigrateImporter extends ConfigEntityBase implements FeedsMigrateImporterInterface {
+
+  /**
+   * The Asset Injector ID.
+   *
+   * @var string
+   */
+  public $id;
+
+  /**
+   * The Js Injector label.
+   *
+   * @var string
+   */
+  public $label;
 
 }

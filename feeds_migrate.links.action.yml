@@ -1,0 +1,5 @@
+entity.feeds_migrate_importer.add_form:
+  route_name: 'entity.feeds_migrate_importer.add_form'
+  title: 'Add Importer'
+  appears_on:
+    - entity.feeds_migrate_importer.collection
