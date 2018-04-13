@@ -53,4 +53,11 @@ class FeedsMigrateImporter extends ConfigEntityBase implements FeedsMigrateImpor
    */
   public $label;
 
+  /**
+   * Migration source mapping ID.
+   *
+   * @var string
+   */
+  public $source;
+
 }
