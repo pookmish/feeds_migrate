@@ -1,0 +1,29 @@
+<?php
+
+/**
+ * @file
+ * feeds_migrate_ui.module
+ */
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function feeds_migrate_ui_entity_type_alter(array &$entity_types) {
+  /** @var \Drupal\Core\Config\Entity\ConfigEntityTypeInterface $migration */
+  $migration = &$entity_types['migration'];
+  $form_handlers = [
+    'add' => 'Drupal\feeds_migrate_ui\Form\FeedsMigrateSourceForm',
+    'edit' => 'Drupal\feeds_migrate_ui\Form\FeedsMigrateSourceForm',
+    'delete' => 'Drupal\feeds_migrate_ui\Form\FeedsMigrateSourceDeleteForm',
+    'enable' => 'Drupal\feeds_migrate_ui\Form\FeedsMigrateSourceEnableForm',
+    'disable' => 'Drupal\feeds_migrate_ui\Form\FeedsMigrateSourceDisableForm',
+  ];
+  $migration->setHandlerClass('form', $form_handlers);
+  $migration->setHandlerClass('list_builder', 'Drupal\feeds_migrate_ui\FeedsMigrateSourceListBuilder');
+
+  $migration->setLinkTemplate('canonical', '/admin/content/feeds-migrate/sources/{migration}');
+  $migration->setLinkTemplate('edit-form', '/admin/content/feeds-migrate/sources/{migration}');
+  $migration->setLinkTemplate('delete-form', '/admin/content/feeds-migrate/sources/{migration}/delete');
+  $migration->setLinkTemplate('enable', '/admin/content/feeds-migrate/sources/{migration}/enable');
+  $migration->setLinkTemplate('disable', '/admin/content/feeds-migrate/sources/{migration}/disable');
+}

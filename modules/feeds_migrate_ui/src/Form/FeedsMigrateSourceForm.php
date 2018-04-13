@@ -49,7 +49,7 @@ class FeedsMigrateSourceForm extends EntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    $form_state->setRedirectUrl(Url::fromRoute('entity.feeds_migrate_importer.collection'));
+    $form_state->setRedirectUrl(Url::fromRoute('entity.migration.collection'));
     return parent::save($form, $form_state);
   }
 
