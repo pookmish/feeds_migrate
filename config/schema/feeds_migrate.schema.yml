@@ -1,0 +1,21 @@
+feeds_migrate.source.*:
+  type: config_entity
+  label: 'Feeds Migrate Source Configuration'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+
+feeds_migrate.importer.*:
+  type: config_entity
+  label: "Feeds Migrate Importer"
+  mapping:
+    id:
+      type: string
+      label: "ID"
+    label:
+      type: label
+      label: "Label"

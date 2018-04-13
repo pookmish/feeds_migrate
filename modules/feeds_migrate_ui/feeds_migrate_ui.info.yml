@@ -1,0 +1,7 @@
+name: 'Feeds Migrate UI'
+description: 'UI for feeds migrate configuration.'
+core: 8.x
+type: module
+package: 'Migrate'
+dependencies:
+  - feeds_migrate

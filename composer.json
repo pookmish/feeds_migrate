@@ -1,0 +1,14 @@
+{
+  "name": "drupal/feeds_migrate",
+  "description": "Drupal feeds migrate module",
+  "type": "drupal-module",
+  "homepage": "http://drupal.org/project/feeds_migrate",
+  "authors": { },
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/feeds_migrate"
+  },
+  "license": "GPL-2.0+",
+  "require": {
+    "drupal/migrate_plus": "~4.0"
+  }
+}
