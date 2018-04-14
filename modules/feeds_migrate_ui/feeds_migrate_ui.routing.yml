@@ -23,6 +23,14 @@ entity.migration.edit_form:
   requirements:
     _permission: 'administer feeds migrate importers'
 
+entity.migration.mapping_form:
+  path: '/admin/content/feeds-migrate/sources/{migration}/mapping'
+  defaults:
+    _entity_form: 'migration.mapping'
+    _title: 'Mapping Configuration'
+  requirements:
+    _permission: 'administer feeds migrate importers'
+
 entity.migration.canonical:
   path: '/admin/content/feeds-migrate/sources/{migration}'
   defaults:
@@ -36,22 +44,6 @@ entity.migration.delete_form:
   defaults:
     _entity_form: 'migration.delete'
     _title: 'Delete Importer'
-  requirements:
-    _permission: 'administer feeds migrate importers'
-
-entity.migration.enable:
-  path: '/admin/content/feeds-migrate/sources/{migration}/enable'
-  defaults:
-    _entity_form: 'migration.enable'
-    _title: 'Enable Importer'
-  requirements:
-    _permission: 'administer feeds migrate importers'
-
-entity.migration.disable:
-  path: '/admin/content/feeds-migrate/sources/{migration}/disable'
-  defaults:
-    _entity_form: 'migration.disable'
-    _title: 'Disable Importer'
   requirements:
     _permission: 'administer feeds migrate importers'
 
