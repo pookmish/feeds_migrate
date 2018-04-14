@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\feeds_migrate_ui\Plugin\migrate_plus\form\authentication;
+namespace Drupal\feeds_migrate_ui\Plugin\feeds_migrate_ui\authentication;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\feeds_migrate_ui\AuthenticationFormInterface;

@@ -25,7 +25,7 @@ class DataFetcherFormPluginManager extends DefaultPluginManager {
    *   The module handler to invoke the alter hook with.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/migrate_plus/form/data_fetcher', $namespaces, $module_handler, 'Drupal\feeds_migrate_ui\DataFetcherFormInterface', 'Drupal\feeds_migrate_ui\Annotation\DataFetcherForm');
+    parent::__construct('Plugin/feeds_migrate_ui/data_fetcher', $namespaces, $module_handler, 'Drupal\feeds_migrate_ui\DataFetcherFormInterface', 'Drupal\feeds_migrate_ui\Annotation\DataFetcherForm');
 
     $this->alterInfo('data_fetcher_form_info');
     $this->setCacheBackend($cache_backend, 'migrate_plus_plugins_data_fetcher_form');

@@ -25,7 +25,7 @@ class AuthenticationFormPluginManager extends DefaultPluginManager {
    *   The module handler to invoke the alter hook with.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/migrate_plus/form/authentication', $namespaces, $module_handler, 'Drupal\feeds_migrate_ui\AuthenticationFormInterface', 'Drupal\feeds_migrate_ui\Annotation\AuthenticationForm');
+    parent::__construct('Plugin/feeds_migrate_ui/authentication', $namespaces, $module_handler, 'Drupal\feeds_migrate_ui\AuthenticationFormInterface', 'Drupal\feeds_migrate_ui\Annotation\AuthenticationForm');
 
     $this->alterInfo('authentication_form_info');
     $this->setCacheBackend($cache_backend, 'migrate_plus_plugins_authentication_form');

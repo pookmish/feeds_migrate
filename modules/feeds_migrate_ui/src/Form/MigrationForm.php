@@ -2,15 +2,15 @@
 
 namespace Drupal\feeds_migrate_ui\Form;
 
+use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityForm;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\migrate_plus\AuthenticationPluginInterface;
-use Drupal\migrate_plus\AuthenticationPluginManager;
-use Drupal\migrate_plus\DataFetcherPluginInterface;
-use Drupal\migrate_plus\DataFetcherPluginManager;
-use Drupal\migrate_plus\DataParserPluginInterface;
-use Drupal\migrate_plus\DataParserPluginManager;
+use Drupal\feeds_migrate_ui\AuthenticationFormPluginManager;
+use Drupal\feeds_migrate_ui\DataFetcherFormPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -31,28 +31,35 @@ class MigrationForm extends EntityForm {
   protected $fetcherPlugins;
 
   /**
-   * @var \Drupal\migrate_plus\DataParserPluginManager
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $parserPlugins;
+  protected $entityTypeManager;
+
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
+   */
+  protected $bundleManager;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('plugin.manager.migrate_plus.authentication'),
-      $container->get('plugin.manager.migrate_plus.data_fetcher'),
-      $container->get('plugin.manager.migrate_plus.data_parser')
+      $container->get('plugin.manager.feeds_migrate_ui.authentication_form'),
+      $container->get('plugin.manager.feeds_migrate_ui.data_fetcher_form'),
+      $container->get('entity_type.manager'),
+      $container->get('entity_type.bundle.info')
     );
   }
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(AuthenticationPluginManager $authentication_plugins, DataFetcherPluginManager $fetcher_plugins, DataParserPluginManager $parser_plugins) {
+  public function __construct(AuthenticationFormPluginManager $authentication_plugins, DataFetcherFormPluginManager $fetcher_plugins, EntityTypeManagerInterface $entity_type_manager, EntityTypeBundleInfoInterface $entity_bundle) {
     $this->authPlugins = $authentication_plugins;
     $this->fetcherPlugins = $fetcher_plugins;
-    $this->parserPlugins = $parser_plugins;
+    $this->entityTypeManager = $entity_type_manager;
+    $this->bundleManager = $entity_bundle;
   }
 
   /**
@@ -83,6 +90,11 @@ class MigrationForm extends EntityForm {
       ],
       '#disabled' => !$entity->isNew(),
     ];
+    $form['group'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Group'),
+      '#default_value' => $entity->migration_group,
+    ];
 
     $auth_options = [];
     foreach ($this->authPlugins->getDefinitions() as $auth_plugin) {
@@ -93,9 +105,15 @@ class MigrationForm extends EntityForm {
       '#title' => $this->t('Authentication Method'),
       '#options' => $auth_options,
       '#empty_option' => $this->t('- None -'),
+      '#ajax' => [
+        'callback' => '::authenticationSettingsForm',
+        'wrapper' => 'authentication-settings',
+        'effect' => 'fade',
+      ],
     ];
-    $form['authentication']['settings'] = [
-      '#prefix' => '<div id="auth-settings">',
+    $form['authentication_settings'] = [
+      '#type' => 'container',
+      '#prefix' => '<div id="authentication-settings">',
       '#suffix' => '</div>',
     ];
 
@@ -103,13 +121,16 @@ class MigrationForm extends EntityForm {
     foreach ($this->fetcherPlugins->getDefinitions() as $fetcher_plugin) {
       $fetcher_options[$fetcher_plugin['id']] = $fetcher_plugin['title'];
     }
-    $form['data_fetcher'] = [
+    $form['data_fetcher_plugin'] = [
       '#type' => 'select',
       '#title' => $this->t('Data Fetcher'),
       '#options' => $fetcher_options,
+      '#default_value' => $entity->source['data_fetcher_plugin'] ?: NULL,
+      '#required' => TRUE,
     ];
 
     $form['data_fetcher']['settings'] = [
+      '#type' => 'container',
       '#prefix' => '<div id="fetcher-settings">',
       '#suffix' => '</div>',
     ];
@@ -117,18 +138,51 @@ class MigrationForm extends EntityForm {
     $form['fetcher'] = [];
     $form['processor'] = [];
 
+    /** @var \Drupal\Core\Entity\ContentEntityTypeInterface $entity_type */
+    foreach ($this->entityTypeManager->getDefinitions() as $entity_type) {
+      if ($entity_type instanceof ContentEntityTypeInterface) {
+        $entity_types['entity:' . $entity_type->id()] = $entity_type->getLabel();
+      }
+    }
+
+    asort($entity_types);
     $form['entity_type'] = [
       '#type' => 'select',
       '#title' => $this->t('Entity Type'),
-      '#options' => [],
+      '#options' => $entity_types,
+      '#default_value' => $entity->destination['plugin'] ?: NULL,
+      '#required' => TRUE,
+      '#ajax' => [
+        'callback' => '::entityTypeOptionsForm',
+        'wrapper' => 'bundle-option',
+        'effect' => 'fade',
+      ],
     ];
+
+    $selected_type = str_replace('entity:', '', $entity->destination['plugin']);
+    $bundles = $this->bundleManager->getBundleInfo($selected_type);
+
+    foreach ($bundles as &$bundle) {
+      $bundle = $bundle['label'];
+    }
     $form['entity_bundle'] = [
       '#type' => 'select',
       '#title' => $this->t('Entity Bundle'),
-      '#options' => [],
+      '#options' => $bundles,
+      '#default_value' => $entity->process['bundle'] ?: NULL,
+      '#required' => TRUE,
+      '#prefix' => '<div id="bundle-option">',
+      '#suffix' => '</div>',
     ];
 
+    $form['#process'][] = [$this, 'processSettingsForms'];
     return $form;
+  }
+
+  public function processSettingsForms(array &$element, FormStateInterface $form_state, array &$complete_form) {
+
+    dpm($element);
+    return $element;
   }
 
   /**
@@ -137,6 +191,33 @@ class MigrationForm extends EntityForm {
   public function save(array $form, FormStateInterface $form_state) {
     $form_state->setRedirectUrl(Url::fromRoute('entity.migration.collection'));
     return parent::save($form, $form_state);
+  }
+
+  /**
+   * @param $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @return mixed
+   */
+  public static function authenticationSettingsForm(&$form, FormStateInterface $form_state) {
+    return $form['authentication_settings'];
+  }
+
+  /**
+   * @param $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @return mixed
+   */
+  public static function entityTypeOptionsForm(&$form, FormStateInterface $form_state) {
+    return $form['entity_bundle'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    parent::submitForm($form, $form_state);
   }
 
 }

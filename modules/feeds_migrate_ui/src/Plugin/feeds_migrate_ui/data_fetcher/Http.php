@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\feeds_migrate_ui\Plugin\migrate_plus\form\data_fetcher;
+namespace Drupal\feeds_migrate_ui\Plugin\feeds_migrate_ui\data_fetcher;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\feeds_migrate_ui\DataFetcherFormInterface;
@@ -9,22 +9,18 @@ use Drupal\feeds_migrate_ui\DataFetcherFormInterface;
  * Provides basic authentication for the HTTP resource.
  *
  * @DataFetcherForm(
- *   id = "file",
- *   title = @Translation("File"),
- *   parent = "file"
+ *   id = "http",
+ *   title = @Translation("Http"),
+ *   parent = "http"
  * )
  */
-class File implements DataFetcherFormInterface {
+class Http implements DataFetcherFormInterface {
 
   /**
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array &$form, FormStateInterface $form_state) {
-    $form['directory'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('File Upload Directory'),
-      '#default_value' => 'public://migrate',
-    ];
+    // Nothing to do here.
   }
 
   /**
@@ -41,15 +37,13 @@ class File implements DataFetcherFormInterface {
     // Nothing to do.
   }
 
-
   /**
    * {@inheritdoc}
    */
   public function buildForm(array &$form, FormStateInterface $form_state) {
-    $form['file'] = [
-      '#type' => 'managed_file',
-      '#title' => $this->t('File Upload'),
-      '#default_value' => '',
+    $form['url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('URL'),
     ];
   }
 
