@@ -19,9 +19,9 @@ function feeds_migrate_ui_entity_type_alter(array &$entity_types) {
 
   $migration->setHandlerClass('list_builder', 'Drupal\feeds_migrate_ui\MigrationListBuilder');
 
-  $migration->setLinkTemplate('canonical', '/admin/content/feeds-migrate/sources/{migration}');
-  $migration->setLinkTemplate('edit-form', '/admin/content/feeds-migrate/sources/{migration}');
-  $migration->setLinkTemplate('delete-form', '/admin/content/feeds-migrate/sources/{migration}/delete');
-  $migration->setLinkTemplate('mapping-form', '/admin/content/feeds-migrate/sources/{migration}/mapping');
+  $migration->setLinkTemplate('canonical', '/admin/structure/feeds-migrate/sources/{migration}');
+  $migration->setLinkTemplate('edit-form', '/admin/structure/feeds-migrate/sources/{migration}');
+  $migration->setLinkTemplate('delete-form', '/admin/structure/feeds-migrate/sources/{migration}/delete');
+  $migration->setLinkTemplate('mapping-form', '/admin/structure/feeds-migrate/sources/{migration}/mapping');
   $migration->set('admin_permission', 'administer feeds migrate importers');
 }

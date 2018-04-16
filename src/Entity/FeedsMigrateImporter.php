@@ -60,4 +60,17 @@ class FeedsMigrateImporter extends ConfigEntityBase implements FeedsMigrateImpor
    */
   public $source;
 
+  public $orphans;
+  public $importPeriod;
+  public $existing;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function calculateDependencies() {
+    $dependencies = parent::calculateDependencies();
+    // TODO add dependency on migration entity.
+    return $dependencies;
+  }
+
 }
