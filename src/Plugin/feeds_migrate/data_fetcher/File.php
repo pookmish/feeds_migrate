@@ -3,8 +3,7 @@
 namespace Drupal\feeds_migrate\Plugin\feeds_migrate\data_fetcher;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\feeds_migrate\DataFetcherFormInterface;
+use Drupal\feeds_migrate\DataFetcherFormPluginBase;
 use Drupal\feeds_migrate\FeedsMigrateImporterInterface;
 use Drupal\migrate\Plugin\Migration;
 
@@ -17,8 +16,7 @@ use Drupal\migrate\Plugin\Migration;
  *   parent = "file"
  * )
  */
-class File implements DataFetcherFormInterface {
-  use StringTranslationTrait;
+class File extends DataFetcherFormPluginBase {
 
   /**
    * {@inheritdoc}
@@ -30,20 +28,6 @@ class File implements DataFetcherFormInterface {
       '#default_value' => 'public://migrate',
     ];
     return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
-    // Nothing to do.
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
-    // Nothing to do.
   }
 
   /**

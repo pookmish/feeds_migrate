@@ -3,7 +3,7 @@
 namespace Drupal\feeds_migrate\Plugin\feeds_migrate\authentication;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\feeds_migrate\AuthenticationFormInterface;
+use Drupal\feeds_migrate\AuthenticationFormPluginBase;
 
 /**
  * Provides basic authentication for the HTTP resource.
@@ -14,7 +14,7 @@ use Drupal\feeds_migrate\AuthenticationFormInterface;
  *   parent = "digest"
  * )
  */
-class Digest implements AuthenticationFormInterface {
+class Digest extends AuthenticationFormPluginBase {
 
   /**
    * {@inheritdoc}
@@ -29,20 +29,6 @@ class Digest implements AuthenticationFormInterface {
       '#title' => $this->t('Password'),
     ];
     return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
-    // Nothing to do.
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
-    // Nothing to do.
   }
 
 }

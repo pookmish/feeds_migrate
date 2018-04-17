@@ -2,8 +2,7 @@
 
 namespace Drupal\feeds_migrate\Plugin\feeds_migrate\authentication;
 
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\feeds_migrate\AuthenticationFormInterface;
+use Drupal\feeds_migrate\AuthenticationFormPluginBase;
 
 /**
  * Provides basic authentication for the HTTP resource.
@@ -14,26 +13,6 @@ use Drupal\feeds_migrate\AuthenticationFormInterface;
  *   parent = "oauth2"
  * )
  */
-class Oauth2 implements AuthenticationFormInterface {
-
-  /**
-   * {@inheritdoc}
-   */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
-    // Nothing to do.
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
-    // Nothing to do.
-  }
+class Oauth2 extends AuthenticationFormPluginBase {
 
 }
