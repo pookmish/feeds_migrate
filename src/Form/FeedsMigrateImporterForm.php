@@ -163,19 +163,18 @@ class FeedsMigrateImporterForm extends EntityForm {
       ],
     ];
 
-    $form['data_fetcher_settings'] = [
+    $form['dataFetcherSettings'] = [
       '#type' => 'details',
       '#group' => 'plugin_settings',
       '#title' => $this->t('Data Fetcher Settings'),
-      '#tree' => FALSE,
+      '#tree' => TRUE,
     ];
 
     foreach ($this->dataFetcherPluginManager->getDefinitions() as $id => $data_fetcher) {
       $plugin = $this->dataFetcherPluginManager->createInstance($id);
-      $element = $plugin->buildForm($form['data_fetcher_settings'], $form_state);
-      $form['data_fetcher_settings'][$id] = $element;
+      $element = $plugin->buildForm($form['dataFetcherSettings'], $form_state);
+      $form['dataFetcherSettings'][$id] = $element;
     }
-
     return $form;
   }
 

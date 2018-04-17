@@ -9,7 +9,7 @@ feeds_migrate.importer.*:
       type: label
       label: "Label"
     source:
-      type: machine_name
+      type: string
       label: "Migration Source"
     importPeriod:
       type: integer
@@ -20,3 +20,5 @@ feeds_migrate.importer.*:
     orphans:
       type: string
       label: "Orphaned Items"
+    dataFetcherSettings:
+      type: sequence

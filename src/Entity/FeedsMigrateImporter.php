@@ -64,6 +64,7 @@ class FeedsMigrateImporter extends ConfigEntityBase implements FeedsMigrateImpor
   public $orphans;
   public $importPeriod;
   public $existing;
+  public $dataFetcherSettings;
 
   /**
    * {@inheritdoc}

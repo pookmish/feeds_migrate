@@ -61,6 +61,7 @@ class Import extends ControllerBase {
     $this->migrationManager = $migration_manager;
     $this->authenticationManager = $authentication_plugins;
     $this->dataFetcherManager = $data_fetcher_plugins;
+    $this->message = new MigrateMessage();
   }
 
   /**
@@ -70,7 +71,6 @@ class Import extends ControllerBase {
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function import(FeedsMigrateImporterInterface $feeds_migrate_importer) {
-    $messenger = new MigrateMessage();
     /** @var \Drupal\migrate\Plugin\MigrationInterface $migration */
     $migrations = $this->migrationManager->createInstances($feeds_migrate_importer->source);
     $this->migration = reset($migrations);
@@ -83,7 +83,8 @@ class Import extends ControllerBase {
         $fetcher_instance->alterMigration($feeds_migrate_importer, $this->migration);
       }
     }
-    $migrate_executable = new FeedsMigrateExecutable($this->migration, $messenger);
+
+    $migrate_executable = new FeedsMigrateExecutable($this->migration, $this->message);
 
     $source = $this->migration->getSourcePlugin();
 
@@ -93,7 +94,7 @@ class Import extends ControllerBase {
     catch (\Exception $e) {
       $this->message->display(
         $this->t('Migration failed with source plugin exception: @e', ['@e' => $e->getMessage()]), 'error');
-      $migration->setStatus(MigrationInterface::STATUS_IDLE);
+      $this->migration->setStatus(MigrationInterface::STATUS_IDLE);
       return MigrationInterface::RESULT_FAILED;
     }
     $batch = [
@@ -130,8 +131,7 @@ class Import extends ControllerBase {
    * @param \Drupal\migrate\Row $row
    */
   public static function batchImportRow(FeedsMigrateExecutable $migrate_executable, Row $row) {
-
-    //    $migrate_executable->importRow($row);
+    $migrate_executable->importRow($row);
   }
 
 }
