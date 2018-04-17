@@ -6,6 +6,8 @@ use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\feeds_migrate\AuthenticationFormPluginManager;
+use Drupal\feeds_migrate\DataFetcherFormPluginManager;
 use Drupal\feeds_migrate\FeedsMigrateImporterInterface;
 use Drupal\migrate_plus\Entity\Migration;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -23,10 +25,22 @@ class FeedsMigrateImporterForm extends EntityForm {
   protected $dateFormatter;
 
   /**
+   * @var \Drupal\feeds_migrate\AuthenticationFormPluginManager
+   */
+  protected $authPluginManager;
+
+  /**
+   * @var \Drupal\feeds_migrate\DataFetcherFormPluginManager
+   */
+  protected $dataFetcherPluginManager;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
     return new static(
+      $container->get('plugin.manager.feeds_migrate.authentication_form'),
+      $container->get('plugin.manager.feeds_migrate.data_fetcher_form'),
       $container->get('date.formatter')
     );
   }
@@ -34,7 +48,9 @@ class FeedsMigrateImporterForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function __construct(DateFormatterInterface $date_formatter) {
+  public function __construct(AuthenticationFormPluginManager $auth_plugins, DataFetcherFormPluginManager $data_fetcher_plugins, DateFormatterInterface $date_formatter) {
+    $this->authPluginManager = $auth_plugins;
+    $this->dataFetcherPluginManager = $data_fetcher_plugins;
     $this->dateFormatter = $date_formatter;
   }
 
@@ -146,6 +162,19 @@ class FeedsMigrateImporterForm extends EntityForm {
         '_delete' => $this->t('Delete'),
       ],
     ];
+
+    $form['data_fetcher_settings'] = [
+      '#type' => 'details',
+      '#group' => 'plugin_settings',
+      '#title' => $this->t('Data Fetcher Settings'),
+      '#tree' => FALSE,
+    ];
+
+    foreach ($this->dataFetcherPluginManager->getDefinitions() as $id => $data_fetcher) {
+      $plugin = $this->dataFetcherPluginManager->createInstance($id);
+      $element = $plugin->buildForm($form['data_fetcher_settings'], $form_state);
+      $form['data_fetcher_settings'][$id] = $element;
+    }
 
     return $form;
   }

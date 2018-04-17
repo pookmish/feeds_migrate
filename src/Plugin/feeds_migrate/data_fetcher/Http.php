@@ -3,9 +3,10 @@
 namespace Drupal\feeds_migrate\Plugin\feeds_migrate\data_fetcher;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\feeds_migrate\DataFetcherFormInterface;
 use Drupal\feeds_migrate\FeedsMigrateImporterInterface;
-use Drupal\migrate\Plugin\MigrationInterface;
+use Drupal\migrate\Plugin\Migration;
 
 /**
  * Provides basic authentication for the HTTP resource.
@@ -17,6 +18,8 @@ use Drupal\migrate\Plugin\MigrationInterface;
  * )
  */
 class Http implements DataFetcherFormInterface {
+
+  use StringTranslationTrait;
 
   /**
    * {@inheritdoc}
@@ -42,18 +45,22 @@ class Http implements DataFetcherFormInterface {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array &$form, FormStateInterface $form_state) {
-    $form['url'] = [
+  public function buildForm(array $form, FormStateInterface $form_state) {
+    $element['url'] = [
       '#type' => 'textfield',
       '#title' => $this->t('URL'),
     ];
+    return $element;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function alterMigration(FeedsMigrateImporterInterface $importer, MigrationInterface $migration) {
-
+  public function alterMigration(FeedsMigrateImporterInterface $importer, Migration $migration) {
+    dpm($importer);
+    $source_config = $migration->getSourceConfiguration();
+    $source_config['urls'] = '';
+    $migration->set('source', $source_config);
   }
 
 }

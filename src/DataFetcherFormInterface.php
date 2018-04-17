@@ -4,7 +4,7 @@ namespace Drupal\feeds_migrate;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
-use Drupal\migrate\Plugin\MigrationInterface;
+use Drupal\migrate\Plugin\Migration;
 
 /**
  * Interface AuthenticationFormPluginInterface.
@@ -19,14 +19,14 @@ interface DataFetcherFormInterface extends PluginFormInterface {
    *
    * @return mixed
    */
-  public function buildForm(array &$form, FormStateInterface $form_state);
+  public function buildForm(array $form, FormStateInterface $form_state);
 
   /**
    * @param \Drupal\feeds_migrate\FeedsMigrateImporterInterface $importer
-   * @param \Drupal\migrate_plus\Entity\MigrationInterface $migration
+   * @param \Drupal\feeds_migrate\FeedsMigrateExecutable $migration
    *
    * @return mixed
    */
-  public function alterMigration(FeedsMigrateImporterInterface $importer, MigrationInterface $migration);
+  public function alterMigration(FeedsMigrateImporterInterface $importer, Migration $migration);
 
 }

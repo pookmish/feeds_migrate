@@ -4,6 +4,7 @@ namespace Drupal\feeds_migrate;
 
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\migrate\MigrateMessage;
 use Drupal\migrate_plus\Entity\Migration;
 
 /**

@@ -74,15 +74,16 @@ class Import extends ControllerBase {
     /** @var \Drupal\migrate\Plugin\MigrationInterface $migration */
     $migrations = $this->migrationManager->createInstances($feeds_migrate_importer->source);
     $this->migration = reset($migrations);
-    $migrate_executable = new FeedsMigrateExecutable($this->migration, $messenger);
-    $source = $this->migration->getSourcePlugin();
+    $source_configuration = $this->migration->getSourceConfiguration();
 
     foreach ($this->dataFetcherManager->getDefinitions() as $definition) {
-      if ($definition['parent'] == $source->getPluginId()) {
+
+      if ($definition['parent'] == $source_configuration['data_fetcher_plugin']) {
         $fetcher_instance = $this->dataFetcherManager->createInstance($definition['id']);
-        $fetcher_instance->alterMigration($feeds_migrate_importer, $migrate_executable);
+        $fetcher_instance->alterMigration($feeds_migrate_importer, $this->migration);
       }
     }
+    $migrate_executable = new FeedsMigrateExecutable($this->migration, $messenger);
 
     $source = $this->migration->getSourcePlugin();
 
@@ -128,8 +129,9 @@ class Import extends ControllerBase {
    * @param \Drupal\feeds_migrate\FeedsMigrateExecutable $migrate_executable
    * @param \Drupal\migrate\Row $row
    */
-  public static function batchImportRow(FeedsMigrateExecutable $migrate_executable, Row $row){
-    $migrate_executable->importRow($row);
+  public static function batchImportRow(FeedsMigrateExecutable $migrate_executable, Row $row) {
+
+    //    $migrate_executable->importRow($row);
   }
 
 }

@@ -3,9 +3,10 @@
 namespace Drupal\feeds_migrate\Plugin\feeds_migrate\data_fetcher;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\feeds_migrate\DataFetcherFormInterface;
 use Drupal\feeds_migrate\FeedsMigrateImporterInterface;
-use Drupal\migrate_plus\Entity\MigrationInterface;
+use Drupal\migrate\Plugin\Migration;
 
 /**
  * Provides basic authentication for the HTTP resource.
@@ -17,16 +18,18 @@ use Drupal\migrate_plus\Entity\MigrationInterface;
  * )
  */
 class File implements DataFetcherFormInterface {
+  use StringTranslationTrait;
 
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array &$form, FormStateInterface $form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form['directory'] = [
       '#type' => 'textfield',
       '#title' => $this->t('File Upload Directory'),
       '#default_value' => 'public://migrate',
     ];
+    return $form;
   }
 
   /**
@@ -46,18 +49,19 @@ class File implements DataFetcherFormInterface {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array &$form, FormStateInterface $form_state) {
-    $form['file'] = [
+  public function buildForm(array $form, FormStateInterface $form_state) {
+    $element['file'] = [
       '#type' => 'managed_file',
       '#title' => $this->t('File Upload'),
       '#default_value' => '',
     ];
+    return $element;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function alterMigration(FeedsMigrateImporterInterface $importer, MigrationInterface $migration) {
+  public function alterMigration(FeedsMigrateImporterInterface $importer, Migration $migration) {
 
   }
 
