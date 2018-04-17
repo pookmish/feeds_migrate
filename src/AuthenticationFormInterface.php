@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\feeds_migrate_ui;
+namespace Drupal\feeds_migrate;
 
 use Drupal\Core\Plugin\PluginFormInterface;
 

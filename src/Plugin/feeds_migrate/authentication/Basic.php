@@ -1,9 +1,9 @@
 <?php
 
-namespace Drupal\feeds_migrate_ui\Plugin\feeds_migrate_ui\authentication;
+namespace Drupal\feeds_migrate\Plugin\feeds_migrate\authentication;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\feeds_migrate_ui\AuthenticationFormInterface;
+use Drupal\feeds_migrate\AuthenticationFormInterface;
 
 /**
  * Provides basic authentication for the HTTP resource.

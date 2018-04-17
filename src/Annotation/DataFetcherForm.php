@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\feeds_migrate_ui\Annotation;
+namespace Drupal\feeds_migrate\Annotation;
 
 use Drupal\Component\Annotation\Plugin;
 
@@ -16,7 +16,7 @@ use Drupal\Component\Annotation\Plugin;
  *
  * @Annotation
  */
-class AuthenticationForm extends Plugin {
+class DataFetcherForm extends Plugin {
 
   /**
    * The plugin ID.
@@ -35,7 +35,7 @@ class AuthenticationForm extends Plugin {
   public $title;
 
   /**
-   * The Authentication plugin id the form is for.
+   * The data_fetcher plugin id the form is for.
    *
    * @var string
    */

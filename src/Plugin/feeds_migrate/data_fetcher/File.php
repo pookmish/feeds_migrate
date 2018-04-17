@@ -1,9 +1,11 @@
 <?php
 
-namespace Drupal\feeds_migrate_ui\Plugin\feeds_migrate_ui\data_fetcher;
+namespace Drupal\feeds_migrate\Plugin\feeds_migrate\data_fetcher;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\feeds_migrate_ui\DataFetcherFormInterface;
+use Drupal\feeds_migrate\DataFetcherFormInterface;
+use Drupal\feeds_migrate\FeedsMigrateImporterInterface;
+use Drupal\migrate_plus\Entity\MigrationInterface;
 
 /**
  * Provides basic authentication for the HTTP resource.
@@ -41,7 +43,6 @@ class File implements DataFetcherFormInterface {
     // Nothing to do.
   }
 
-
   /**
    * {@inheritdoc}
    */
@@ -51,6 +52,13 @@ class File implements DataFetcherFormInterface {
       '#title' => $this->t('File Upload'),
       '#default_value' => '',
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterMigration(FeedsMigrateImporterInterface $importer, MigrationInterface $migration) {
+
   }
 
 }

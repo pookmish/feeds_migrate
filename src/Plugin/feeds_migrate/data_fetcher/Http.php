@@ -1,9 +1,11 @@
 <?php
 
-namespace Drupal\feeds_migrate_ui\Plugin\feeds_migrate_ui\data_fetcher;
+namespace Drupal\feeds_migrate\Plugin\feeds_migrate\data_fetcher;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\feeds_migrate_ui\DataFetcherFormInterface;
+use Drupal\feeds_migrate\DataFetcherFormInterface;
+use Drupal\feeds_migrate\FeedsMigrateImporterInterface;
+use Drupal\migrate\Plugin\MigrationInterface;
 
 /**
  * Provides basic authentication for the HTTP resource.
@@ -19,7 +21,7 @@ class Http implements DataFetcherFormInterface {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array &$form, FormStateInterface $form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     // Nothing to do here.
   }
 
@@ -45,6 +47,13 @@ class Http implements DataFetcherFormInterface {
       '#type' => 'textfield',
       '#title' => $this->t('URL'),
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterMigration(FeedsMigrateImporterInterface $importer, MigrationInterface $migration) {
+
   }
 
 }

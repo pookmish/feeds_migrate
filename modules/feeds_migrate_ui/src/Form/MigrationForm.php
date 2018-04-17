@@ -2,15 +2,14 @@
 
 namespace Drupal\feeds_migrate_ui\Form;
 
-use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\feeds_migrate_ui\AuthenticationFormPluginManager;
-use Drupal\feeds_migrate_ui\DataFetcherFormPluginManager;
+use Drupal\feeds_migrate\AuthenticationFormPluginManager;
+use Drupal\feeds_migrate\DataFetcherFormPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -45,8 +44,8 @@ class MigrationForm extends EntityForm {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('plugin.manager.feeds_migrate_ui.authentication_form'),
-      $container->get('plugin.manager.feeds_migrate_ui.data_fetcher_form'),
+      $container->get('plugin.manager.feeds_migrate.authentication_form'),
+      $container->get('plugin.manager.feeds_migrate.data_fetcher_form'),
       $container->get('entity_type.manager'),
       $container->get('entity_type.bundle.info')
     );
@@ -180,8 +179,6 @@ class MigrationForm extends EntityForm {
   }
 
   public function processSettingsForms(array &$element, FormStateInterface $form_state, array &$complete_form) {
-
-    dpm($element);
     return $element;
   }
 

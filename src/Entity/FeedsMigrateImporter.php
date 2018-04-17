@@ -33,7 +33,8 @@ use Drupal\feeds_migrate\FeedsMigrateImporterInterface;
  *     "edit-form" = "/admin/content/feeds-migrate/{feeds_migrate_importer}",
  *     "delete-form" = "/admin/content/feeds-migrate/{feeds_migrate_importer}/delete",
  *     "enable" = "/admin/content/feeds-migrate/{feeds_migrate_importer}/enable",
- *     "disable" = "/admin/content/feeds-migrate/{feeds_migrate_importer}/disable"
+ *     "disable" = "/admin/content/feeds-migrate/{feeds_migrate_importer}/disable",
+ *     "import" = "/import/{feeds_migrate_importer}"
  *   }
  * )
  */
