@@ -46,7 +46,11 @@ class File extends DataFetcherFormPluginBase {
    * {@inheritdoc}
    */
   public function alterMigration(FeedsMigrateImporterInterface $importer, Migration $migration) {
-
+    if (!empty($importer->dataFetcherSettings['file']['file'])) {
+      $source_config = $migration->getSourceConfiguration();
+      $source_config['urls'] = $importer->dataFetcherSettings['file']['file'];
+      $migration->set('source', $source_config);
+    }
   }
 
 }

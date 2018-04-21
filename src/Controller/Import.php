@@ -71,21 +71,7 @@ class Import extends ControllerBase {
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function import(FeedsMigrateImporterInterface $feeds_migrate_importer) {
-    /** @var \Drupal\migrate\Plugin\MigrationInterface $migration */
-    $migrations = $this->migrationManager->createInstances($feeds_migrate_importer->source);
-    $this->migration = reset($migrations);
-    $source_configuration = $this->migration->getSourceConfiguration();
-
-    foreach ($this->dataFetcherManager->getDefinitions() as $definition) {
-
-      if ($definition['parent'] == $source_configuration['data_fetcher_plugin']) {
-        $fetcher_instance = $this->dataFetcherManager->createInstance($definition['id']);
-        $fetcher_instance->alterMigration($feeds_migrate_importer, $this->migration);
-      }
-    }
-
-    $migrate_executable = new FeedsMigrateExecutable($this->migration, $this->message);
-
+    $migrate_executable = $feeds_migrate_importer->getExecutable();
     $source = $this->migration->getSourcePlugin();
 
     try {
@@ -117,7 +103,7 @@ class Import extends ControllerBase {
         $this->message->display(
           $this->t('Migration failed with source plugin exception: @e',
             ['@e' => $e->getMessage()]), 'error');
-        $migration->setStatus(MigrationInterface::STATUS_IDLE);
+//        $migration->setStatus(MigrationInterface::STATUS_IDLE);
         return MigrationInterface::RESULT_FAILED;
       }
     }

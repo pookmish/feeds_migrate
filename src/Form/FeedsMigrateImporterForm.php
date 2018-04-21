@@ -102,6 +102,9 @@ class FeedsMigrateImporterForm extends EntityForm {
       '#options' => $sources,
       '#default_value' => $entity->source,
       '#required' => TRUE,
+      '#attributes' => [
+        'disabled' => !empty($entity->source),
+      ],
     ];
 
     $form['plugin_settings'] = [
