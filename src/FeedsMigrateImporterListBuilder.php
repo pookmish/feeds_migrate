@@ -27,7 +27,6 @@ class FeedsMigrateImporterListBuilder extends ConfigEntityListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
-    dpm($entity);
     /** @var \Drupal\migrate_plus\Entity\Migration $migration */
     $migration = Migration::load($entity->source);
 
