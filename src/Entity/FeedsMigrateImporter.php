@@ -79,6 +79,9 @@ class FeedsMigrateImporter extends ConfigEntityBase implements FeedsMigrateImpor
 
   public $lastRan = 0;
 
+  /**
+   * @var \Drupal\migrate\Plugin\Migration
+   */
   protected $migration;
 
   /**
@@ -128,9 +131,13 @@ class FeedsMigrateImporter extends ConfigEntityBase implements FeedsMigrateImpor
    */
   public function getExecutable() {
     $this->alterFetcher();
-    $this->alterAuthentication();
-
-    $messenger = new MigrateMessage();;
+    if (\Drupal::moduleHandler()->moduleExists('key')) {
+      $this->alterAuthentication();
+    }
+    $messenger = new MigrateMessage();
+    if ($this->existing == 2) {
+      $this->migration->getIdMap()->prepareUpdate();
+    }
     return new FeedsMigrateExecutable($this->migration, $messenger);
   }
 

@@ -9,6 +9,7 @@ use Drupal\feeds_migrate\DataFetcherFormPluginManager;
 use Drupal\feeds_migrate\FeedsMigrateExecutable;
 use Drupal\feeds_migrate\FeedsMigrateImporterInterface;
 use Drupal\migrate\MigrateMessage;
+use Drupal\migrate\Plugin\MigrateIdMapInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Plugin\MigrationPluginManagerInterface;
 use Drupal\migrate\Row;
@@ -71,7 +72,11 @@ class Import extends ControllerBase {
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function import(FeedsMigrateImporterInterface $feeds_migrate_importer) {
+    $feeds_migrate_importer->lastRan = time();
+    $feeds_migrate_importer->save();
+
     $migrate_executable = $feeds_migrate_importer->getExecutable();
+    $this->migration = $this->migrationManager->createInstance($feeds_migrate_importer->source);
     $source = $this->migration->getSourcePlugin();
 
     try {
@@ -85,6 +90,7 @@ class Import extends ControllerBase {
     }
     $batch = [
       'title' => $this->t('Importing @label', ['@label' => $feeds_migrate_importer->label()]),
+      'finished' => [static::class, 'batchFinished'],
       'operations' => [],
     ];
     while ($source->valid()) {
@@ -103,7 +109,7 @@ class Import extends ControllerBase {
         $this->message->display(
           $this->t('Migration failed with source plugin exception: @e',
             ['@e' => $e->getMessage()]), 'error');
-//        $migration->setStatus(MigrationInterface::STATUS_IDLE);
+        //        $migration->setStatus(MigrationInterface::STATUS_IDLE);
         return MigrationInterface::RESULT_FAILED;
       }
     }
@@ -116,8 +122,46 @@ class Import extends ControllerBase {
    * @param \Drupal\feeds_migrate\FeedsMigrateExecutable $migrate_executable
    * @param \Drupal\migrate\Row $row
    */
-  public static function batchImportRow(FeedsMigrateExecutable $migrate_executable, Row $row) {
+  public static function batchImportRow(FeedsMigrateExecutable $migrate_executable, Row $row, &$context) {
     $migrate_executable->importRow($row);
+    $id_map = $row->getIdMap();
+
+    if ($id_map['destid1']) {
+      $context['results']['success'][] = $row;
+      return;
+    }
+
+    if ($id_map['source_row_status'] == MigrateIdMapInterface::STATUS_FAILED) {
+      $context['results']['failed'][] = $row;
+      return;
+    }
+
+    $context['results']['ignored'][] = $row;
+  }
+
+  /**
+   * @param $success
+   * @param $results
+   * @param $operations
+   */
+  public static function batchFinished($success, $results, $operations) {
+    $messenger = \Drupal::messenger();
+
+    if (empty($results)) {
+      $messenger->addMessage(t('No items processed.'));
+    }
+
+    if (!empty($results['success'])) {
+      $messenger->addMessage(t('Successfully imported %success items.', ['%success' => count($results['success'])]));
+    }
+
+    if (!empty($results['ignored'])) {
+      $messenger->addMessage(t('Skipped %ignored items.', ['%ignored' => count($results['ignored'])]));
+    }
+
+    if (!empty($results['failed'])) {
+      $messenger->addMessage(t('Failed to import %failed items', ['%failed' => count($results['failed'])]));
+    }
   }
 
 }

@@ -4,6 +4,7 @@ namespace Drupal\feeds_migrate\Form;
 
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityForm;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\Url;
@@ -48,18 +49,20 @@ class FeedsMigrateImporterForm extends EntityForm {
       $container->get('plugin.manager.feeds_migrate.authentication_form'),
       $container->get('plugin.manager.feeds_migrate.data_fetcher_form'),
       $container->get('date.formatter'),
-      $container->get('queue')
+      $container->get('queue'),
+      $container->get('module_handler')
     );
   }
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(AuthenticationFormPluginManager $auth_plugins, DataFetcherFormPluginManager $data_fetcher_plugins, DateFormatterInterface $date_formatter, QueueFactory $queue) {
+  public function __construct(AuthenticationFormPluginManager $auth_plugins, DataFetcherFormPluginManager $data_fetcher_plugins, DateFormatterInterface $date_formatter, QueueFactory $queue, ModuleHandlerInterface $module_handler) {
     $this->authPluginManager = $auth_plugins;
     $this->dataFetcherPluginManager = $data_fetcher_plugins;
     $this->dateFormatter = $date_formatter;
     $this->queueFactory = $queue;
+    $this->moduleHandler = $module_handler;
   }
 
   /**
@@ -159,9 +162,9 @@ class FeedsMigrateImporterForm extends EntityForm {
       '#title' => $this->t('Update Existing Content'),
       '#default_value' => $entity->existing ?: 0,
       '#options' => [
-        $this->t('Do not update existing content'),
-        $this->t('Replace existing content'),
-        $this->t('Update existing content'),
+        0 => $this->t('Do not update existing content'),
+        1 => $this->t('Replace existing content'),
+        2 => $this->t('Update existing content'),
       ],
     ];
     $form['processor_settings']['orphans'] = [
@@ -194,24 +197,26 @@ class FeedsMigrateImporterForm extends EntityForm {
       '#tree' => TRUE,
     ];
 
-    $form['authSettings']['auth_type'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Authentication Type'),
-      '#options' => [],
-      '#empty_option' => $this->t('- None -'),
-      //      '#default_value' => $source_configuration['authentication']['plugin'] ?: NULL,
-    ];
-
-    foreach ($this->authPluginManager->getDefinitions() as $id => $authentication) {
-      $plugin = $this->authPluginManager->createInstance($id);
-      $element = $plugin->buildForm($form['authSettings'], $form_state);
-      $element['secret_key']['#states'] = [
-        'visible' => [
-          ':input[name*="auth_type"]' => ['value' => $id],
-        ],
+    if ($this->moduleHandler->moduleExists('key')) {
+      $form['authSettings']['auth_type'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Authentication Type'),
+        '#options' => [],
+        '#empty_option' => $this->t('- None -'),
+        '#default_value' => key($entity->authSettings ?: []),
       ];
-      $form['authSettings'][$id] = $element;
-      $form['authSettings']['auth_type']['#options'][$id] = $authentication['title'];
+
+      foreach ($this->authPluginManager->getDefinitions() as $id => $authentication) {
+        $plugin = $this->authPluginManager->createInstance($id);
+        $element = $plugin->buildForm($form['authSettings'], $form_state);
+        $element['secret_key']['#states'] = [
+          'visible' => [
+            ':input[name*="auth_type"]' => ['value' => $id],
+          ],
+        ];
+        $form['authSettings'][$id] = $element;
+        $form['authSettings']['auth_type']['#options'][$id] = $authentication['title'];
+      }
     }
 
     return $form;
@@ -222,7 +227,25 @@ class FeedsMigrateImporterForm extends EntityForm {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
-    // TODO: Remove configs that aren't applicable from form.
+    $auth_type = $form_state->getValue(['authSettings', 'auth_type']);
+    if (empty($auth_type)) {
+      $form_state->unsetValue('authSettings');
+    }
+    else {
+      $auth_settings = $form_state->getValue('authSettings');
+      foreach (array_keys($auth_settings) as $id) {
+        if ($id != $auth_type) {
+          unset($auth_settings[$id]);
+        }
+      }
+      $form_state->setValue('authSettings', $auth_settings);
+    }
+
+    $data_fetcher = $form_state->getValue('dataFetcherSettings');
+    foreach (array_keys($data_fetcher) as $id) {
+
+    }
+    $form_state->setValue('dataFetcherSettings', $data_fetcher);
   }
 
   /**

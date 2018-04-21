@@ -457,8 +457,4 @@ class FeedsMigrateExecutable extends MigrateExecutable {
     }
   }
 
-  public function set(){
-
-  }
-
 }
