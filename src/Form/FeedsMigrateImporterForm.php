@@ -199,6 +199,7 @@ class FeedsMigrateImporterForm extends EntityForm {
       '#title' => $this->t('Authentication Type'),
       '#options' => [],
       '#empty_option' => $this->t('- None -'),
+      //      '#default_value' => $source_configuration['authentication']['plugin'] ?: NULL,
     ];
 
     foreach ($this->authPluginManager->getDefinitions() as $id => $authentication) {
@@ -214,6 +215,14 @@ class FeedsMigrateImporterForm extends EntityForm {
     }
 
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    parent::validateForm($form, $form_state);
+    // TODO: Remove configs that aren't applicable from form.
   }
 
   /**

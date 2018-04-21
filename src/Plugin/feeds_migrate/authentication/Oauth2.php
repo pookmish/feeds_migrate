@@ -22,6 +22,15 @@ class Oauth2 extends AuthenticationFormPluginBase {
    */
   public function alterMigration(FeedsMigrateImporterInterface $importer, Migration $migration) {
     // TODO: Implement alterMigration() method.
+    if (!empty($importer->authSettings['oath2']['secret_key'])) {
+      $source_config = $migration->getSourceConfiguration();
+      $source_config['authentication']['base_uri'] = '';
+      $source_config['authentication']['token_url'] = '';
+      $source_config['authentication']['grant_type'] = '';
+      $source_config['authentication']['client_id'] = '';
+      $source_config['authentication']['client_secret'] = '';
+      $migration->set('source', $source_config);
+    }
   }
 
 }

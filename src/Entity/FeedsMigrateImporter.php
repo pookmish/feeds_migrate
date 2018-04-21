@@ -75,6 +75,8 @@ class FeedsMigrateImporter extends ConfigEntityBase implements FeedsMigrateImpor
 
   public $dataFetcherSettings;
 
+  public $authSettings;
+
   public $lastRan = 0;
 
   protected $migration;
@@ -151,13 +153,13 @@ class FeedsMigrateImporter extends ConfigEntityBase implements FeedsMigrateImpor
    * Alter the authentication method from the configured plugin.
    */
   protected function alterAuthentication() {
+    $source_configuration = $this->migration->getSourceConfiguration();
+
     if (empty($source_configuration['authentication']['plugin'])) {
       return;
     }
 
     $auth_plugins = \Drupal::service('plugin.manager.feeds_migrate.authentication_form');
-    $source_configuration = $this->migration->getSourceConfiguration();
-
     foreach ($auth_plugins->getDefinitions() as $definition) {
       if ($definition['parent'] == $source_configuration['authentication']['plugin']) {
         $auth_instance = $auth_plugins->createInstance($definition['id']);
