@@ -4,6 +4,8 @@ namespace Drupal\feeds_migrate\Plugin\feeds_migrate\authentication;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\feeds_migrate\AuthenticationFormPluginBase;
+use Drupal\feeds_migrate\FeedsMigrateImporterInterface;
+use Drupal\migrate\Plugin\Migration;
 
 /**
  * Provides basic authentication for the HTTP resource.
@@ -19,16 +21,8 @@ class Basic extends AuthenticationFormPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    $form['usernmae'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Username'),
-    ];
-    $form['password'] = [
-      '#type' => 'password',
-      '#title' => $this->t('Password'),
-    ];
-    return $form;
+  public function alterMigration(FeedsMigrateImporterInterface $importer, Migration $migration) {
+    // todo.
   }
 
 }

@@ -5,6 +5,7 @@ namespace Drupal\feeds_migrate\Form;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\Url;
 use Drupal\feeds_migrate\AuthenticationFormPluginManager;
 use Drupal\feeds_migrate\DataFetcherFormPluginManager;
@@ -35,23 +36,30 @@ class FeedsMigrateImporterForm extends EntityForm {
   protected $dataFetcherPluginManager;
 
   /**
+   * @var \Drupal\Core\Queue\QueueFactory
+   */
+  protected $queueFactory;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('plugin.manager.feeds_migrate.authentication_form'),
       $container->get('plugin.manager.feeds_migrate.data_fetcher_form'),
-      $container->get('date.formatter')
+      $container->get('date.formatter'),
+      $container->get('queue')
     );
   }
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(AuthenticationFormPluginManager $auth_plugins, DataFetcherFormPluginManager $data_fetcher_plugins, DateFormatterInterface $date_formatter) {
+  public function __construct(AuthenticationFormPluginManager $auth_plugins, DataFetcherFormPluginManager $data_fetcher_plugins, DateFormatterInterface $date_formatter, QueueFactory $queue) {
     $this->authPluginManager = $auth_plugins;
     $this->dataFetcherPluginManager = $data_fetcher_plugins;
     $this->dateFormatter = $date_formatter;
+    $this->queueFactory = $queue;
   }
 
   /**

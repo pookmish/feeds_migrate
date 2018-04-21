@@ -22,3 +22,6 @@ feeds_migrate.importer.*:
       label: "Orphaned Items"
     dataFetcherSettings:
       type: sequence
+    lastRan:
+      type: integer
+      label: "Queued up for cron"

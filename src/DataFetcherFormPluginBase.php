@@ -3,16 +3,14 @@
 namespace Drupal\feeds_migrate;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Plugin\PluginBase;
 
 /**
  * Class DataFetcherFormPluginBase.
  *
  * @package Drupal\feeds_migrate
  */
-abstract class DataFetcherFormPluginBase implements DataFetcherFormInterface {
-
-  use StringTranslationTrait;
+abstract class DataFetcherFormPluginBase extends PluginBase implements DataFetcherFormInterface {
 
   /**
    * {@inheritdoc}

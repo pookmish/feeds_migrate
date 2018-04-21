@@ -18,7 +18,8 @@ use Drupal\feeds_migrate\FeedsMigrateImporterInterface;
  *       "edit" = "Drupal\feeds_migrate\Form\FeedsMigrateImporterForm",
  *       "delete" = "Drupal\feeds_migrate\Form\FeedsMigrateImporterDeleteForm",
  *       "enable" = "Drupal\feeds_migrate\Form\FeedsMigrateImporterEnableForm",
- *       "disable" = "Drupal\feeds_migrate\Form\FeedsMigrateImporterDisableForm"
+ *       "disable" =
+ *   "Drupal\feeds_migrate\Form\FeedsMigrateImporterDisableForm"
  *     },
  *   },
  *   config_prefix = "importer",
@@ -31,9 +32,12 @@ use Drupal\feeds_migrate\FeedsMigrateImporterInterface;
  *   links = {
  *     "canonical" = "/admin/content/feeds-migrate/{feeds_migrate_importer}",
  *     "edit-form" = "/admin/content/feeds-migrate/{feeds_migrate_importer}",
- *     "delete-form" = "/admin/content/feeds-migrate/{feeds_migrate_importer}/delete",
- *     "enable" = "/admin/content/feeds-migrate/{feeds_migrate_importer}/enable",
- *     "disable" = "/admin/content/feeds-migrate/{feeds_migrate_importer}/disable",
+ *     "delete-form" =
+ *   "/admin/content/feeds-migrate/{feeds_migrate_importer}/delete",
+ *     "enable" =
+ *   "/admin/content/feeds-migrate/{feeds_migrate_importer}/enable",
+ *     "disable" =
+ *   "/admin/content/feeds-migrate/{feeds_migrate_importer}/disable",
  *     "import" = "/import/{feeds_migrate_importer}"
  *   }
  * )
@@ -62,9 +66,14 @@ class FeedsMigrateImporter extends ConfigEntityBase implements FeedsMigrateImpor
   public $source;
 
   public $orphans;
+
   public $importPeriod;
+
   public $existing;
+
   public $dataFetcherSettings;
+
+  public $lastRan = 0;
 
   /**
    * {@inheritdoc}
@@ -73,6 +82,19 @@ class FeedsMigrateImporter extends ConfigEntityBase implements FeedsMigrateImpor
     $dependencies = parent::calculateDependencies();
     // TODO add dependency on migration entity.
     return $dependencies;
+  }
+
+  /**
+   * If the priodic import should be executed.
+   *
+   * @return bool
+   *   True if it should be ran on cron.
+   */
+  public function needsImported() {
+    $request_time = \Drupal::time()->getRequestTime();
+    if ($this->importPeriod != -1 && ($this->lastRan + $this->importPeriod) <= $request_time) {
+      return TRUE;
+    }
   }
 
 }
