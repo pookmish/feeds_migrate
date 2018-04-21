@@ -22,7 +22,7 @@ class Basic extends AuthenticationFormPluginBase {
    * {@inheritdoc}
    */
   public function alterMigration(FeedsMigrateImporterInterface $importer, Migration $migration) {
-    // todo.
+    // TODO: Implement alterMigration() method.
   }
 
 }

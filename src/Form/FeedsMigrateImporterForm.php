@@ -186,6 +186,33 @@ class FeedsMigrateImporterForm extends EntityForm {
       $element = $plugin->buildForm($form['dataFetcherSettings'], $form_state);
       $form['dataFetcherSettings'][$id] = $element;
     }
+
+    $form['authSettings'] = [
+      '#type' => 'details',
+      '#group' => 'plugin_settings',
+      '#title' => $this->t('Authentication Settings'),
+      '#tree' => TRUE,
+    ];
+
+    $form['authSettings']['auth_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Authentication Type'),
+      '#options' => [],
+      '#empty_option' => $this->t('- None -'),
+    ];
+
+    foreach ($this->authPluginManager->getDefinitions() as $id => $authentication) {
+      $plugin = $this->authPluginManager->createInstance($id);
+      $element = $plugin->buildForm($form['authSettings'], $form_state);
+      $element['secret_key']['#states'] = [
+        'visible' => [
+          ':input[name*="auth_type"]' => ['value' => $id],
+        ],
+      ];
+      $form['authSettings'][$id] = $element;
+      $form['authSettings']['auth_type']['#options'][$id] = $authentication['title'];
+    }
+
     return $form;
   }
 

@@ -3,6 +3,7 @@
 namespace Drupal\feeds_migrate;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\migrate\Plugin\Migration;
 
@@ -11,7 +12,7 @@ use Drupal\migrate\Plugin\Migration;
  *
  * @package Drupal\feeds_migrate
  */
-interface AuthenticationFormInterface extends PluginFormInterface {
+interface AuthenticationFormInterface extends PluginFormInterface, ContainerFactoryPluginInterface {
 
   /**
    * @param $form

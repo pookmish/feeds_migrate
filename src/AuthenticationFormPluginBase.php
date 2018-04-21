@@ -4,6 +4,7 @@ namespace Drupal\feeds_migrate;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginBase;
+use Drupal\key\KeyRepositoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -25,20 +26,16 @@ abstract class AuthenticationFormPluginBase extends PluginBase implements Authen
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, $key_provider) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, KeyRepositoryInterface $key_repo) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->keyProvider = $key_provider;
+    $this->keyProvider = $key_repo;
   }
 
   /**
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    $element['secret_key'] = [
-      '#type' => 'key_select',
-      '#title' => $this->t('Secret key'),
-    ];
-    return $element;
+
   }
 
   /**
@@ -59,7 +56,11 @@ abstract class AuthenticationFormPluginBase extends PluginBase implements Authen
    * {@inheritdoc}
    */
   public function buildForm($form, FormStateInterface $form_state) {
-    return [];
+    $element['secret_key'] = [
+      '#type' => 'key_select',
+      '#title' => $this->t('Secret key'),
+    ];
+    return $element;
   }
 
 }
