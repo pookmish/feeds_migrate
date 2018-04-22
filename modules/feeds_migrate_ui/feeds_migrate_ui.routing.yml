@@ -1,6 +1,6 @@
 # AssetInjectorCsss routing definition
 entity.migration.collection:
-  path: '/admin/content/feeds-migrate/sources'
+  path: '/admin/structure/feeds-migrate/sources'
   defaults:
     _entity_list: 'migration'
     _title: 'Feeds Migrate'
@@ -8,7 +8,7 @@ entity.migration.collection:
     _permission: 'administer feeds migrate importers'
 
 entity.migration.add_form:
-  path: '/admin/content/feeds-migrate/sources/add'
+  path: '/admin/structure/feeds-migrate/sources/add'
   defaults:
     _entity_form: 'migration.add'
     _title: 'Add Importer'
@@ -16,15 +16,23 @@ entity.migration.add_form:
     _permission: 'administer feeds migrate importers'
 
 entity.migration.edit_form:
-  path: '/admin/content/feeds-migrate/sources/{migration}'
+  path: '/admin/structure/feeds-migrate/sources/{migration}'
   defaults:
     _entity_form: 'migration.edit'
     _title: 'Edit Importer'
   requirements:
     _permission: 'administer feeds migrate importers'
 
+entity.migration.mapping_form:
+  path: '/admin/structure/feeds-migrate/sources/{migration}/mapping'
+  defaults:
+    _entity_form: 'migration.mapping'
+    _title: 'Mapping Configuration'
+  requirements:
+    _permission: 'administer feeds migrate importers'
+
 entity.migration.canonical:
-  path: '/admin/content/feeds-migrate/sources/{migration}'
+  path: '/admin/structure/feeds-migrate/sources/{migration}'
   defaults:
     _entity_form: 'migration.edit'
     _title: 'Edit Importer'
@@ -32,31 +40,15 @@ entity.migration.canonical:
     _permission: 'administer feeds migrate importers'
 
 entity.migration.delete_form:
-  path: '/admin/content/feeds-migrate/sources/{migration}/delete'
+  path: '/admin/structure/feeds-migrate/sources/{migration}/delete'
   defaults:
     _entity_form: 'migration.delete'
     _title: 'Delete Importer'
   requirements:
     _permission: 'administer feeds migrate importers'
 
-entity.migration.enable:
-  path: '/admin/content/feeds-migrate/sources/{migration}/enable'
-  defaults:
-    _entity_form: 'migration.enable'
-    _title: 'Enable Importer'
-  requirements:
-    _permission: 'administer feeds migrate importers'
-
-entity.migration.disable:
-  path: '/admin/content/feeds-migrate/sources/{migration}/disable'
-  defaults:
-    _entity_form: 'migration.disable'
-    _title: 'Disable Importer'
-  requirements:
-    _permission: 'administer feeds migrate importers'
-
 entity.migration.duplicate_form:
-  path: '/admin/content/feeds-migrate/sources/{migration}/duplicate'
+  path: '/admin/structure/feeds-migrate/sources/{migration}/duplicate'
   defaults:
     _entity_form: 'migration.duplicate'
     _title: 'Duplicate Importer'

@@ -2,7 +2,7 @@ name: 'Feeds Migrate'
 description: 'Import items using Migrate backend'
 core: 8.x
 type: module
-package: 'Migrate'
+package: 'Migration'
 dependencies:
   - drupal:migrate (>=8.3)
   - migrate_plus:migrate_plus

@@ -1,0 +1,10 @@
+services:
+  plugin.manager.feeds_migrate.authentication_form:
+    class: Drupal\feeds_migrate\AuthenticationFormPluginManager
+    parent: default_plugin_manager
+  plugin.manager.feeds_migrate.data_fetcher_form:
+    class: Drupal\feeds_migrate\DataFetcherFormPluginManager
+    parent: default_plugin_manager
+  plugin.manager.feeds_migrate.data_parser_form:
+    class: Drupal\feeds_migrate\DataParserFormPluginManager
+    parent: default_plugin_manager

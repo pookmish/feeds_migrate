@@ -33,4 +33,17 @@ class MigrationListBuilder extends ConfigEntityListBuilder {
     return $row;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultOperations(EntityInterface $entity) {
+    $operations = parent::getDefaultOperations($entity);
+    $operations['mapping'] = [
+      'title' => t('Mapping'),
+      'weight' => -10,
+      'url' => $this->ensureDestination($entity->toUrl('mapping-form')),
+    ];
+    return $operations;
+  }
+
 }

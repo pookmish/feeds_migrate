@@ -1,0 +1,25 @@
+<?php
+
+/**
+ * @file
+ * feeds_migrate.module
+ */
+
+use Drupal\feeds_migrate\Entity\FeedsMigrateImporter;
+
+/**
+ * Implements hook_cron().
+ */
+function feeds_migrate_cron() {
+  $request_time = \Drupal::time()->getRequestTime();
+  $queue = \Drupal::queue('feeds_migrate_importer');
+
+  /** @var FeedsMigrateImporter $importer */
+  foreach (FeedsMigrateImporter::loadMultiple() as $importer) {
+    if ($importer->needsImported() && $queue->createItem($importer->id())) {
+      // Add timestamp to avoid queueing item more than once.
+      $importer->lastRan = $request_time;
+      $importer->save();
+    }
+  }
+}
