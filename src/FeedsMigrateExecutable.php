@@ -457,4 +457,11 @@ class FeedsMigrateExecutable extends MigrateExecutable {
     }
   }
 
+  /**
+   * @return \Drupal\migrate\Plugin\MigrationInterface
+   */
+  public function getMigration() {
+    return $this->migration;
+  }
+
 }

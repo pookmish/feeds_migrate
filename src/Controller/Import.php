@@ -75,8 +75,9 @@ class Import extends ControllerBase {
     $feeds_migrate_importer->lastRan = time();
     $feeds_migrate_importer->save();
 
+    /** @var FeedsMigrateExecutable $migrate_executable */
     $migrate_executable = $feeds_migrate_importer->getExecutable();
-    $this->migration = $this->migrationManager->createInstance($feeds_migrate_importer->source);
+    $this->migration = $migrate_executable->getMigration();
     $source = $this->migration->getSourcePlugin();
 
     try {
@@ -88,11 +89,13 @@ class Import extends ControllerBase {
       $this->migration->setStatus(MigrationInterface::STATUS_IDLE);
       return MigrationInterface::RESULT_FAILED;
     }
+
     $batch = [
       'title' => $this->t('Importing @label', ['@label' => $feeds_migrate_importer->label()]),
       'finished' => [static::class, 'batchFinished'],
       'operations' => [],
     ];
+
     while ($source->valid()) {
       $row = $source->current();
       $this->sourceIdValues = $row->getSourceIdValues();
@@ -112,6 +115,7 @@ class Import extends ControllerBase {
         //        $migration->setStatus(MigrationInterface::STATUS_IDLE);
         return MigrationInterface::RESULT_FAILED;
       }
+
     }
 
     batch_set($batch);
