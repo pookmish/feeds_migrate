@@ -4,6 +4,7 @@ namespace Drupal\feeds_migrate\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\feeds_migrate\AuthenticationFormPluginManager;
 use Drupal\feeds_migrate\DataFetcherFormPluginManager;
 use Drupal\feeds_migrate\FeedsMigrateExecutable;
@@ -72,8 +73,24 @@ class Import extends ControllerBase {
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function import(FeedsMigrateImporterInterface $feeds_migrate_importer) {
-    $feeds_migrate_importer->lastRan = time();
-    $feeds_migrate_importer->save();
+    $batch = $this->getBatch($feeds_migrate_importer);
+    if (!is_array($batch)) {
+      $this->messenger()
+        ->addError($this->t('Import failed. See database logs for more details'));
+      return [];
+    }
+
+    batch_set($batch);
+    return batch_process();
+  }
+
+  /**
+   * @param \Drupal\feeds_migrate\FeedsMigrateImporterInterface $feeds_migrate_importer
+   *
+   * @return array|int
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  protected function getBatch(FeedsMigrateImporterInterface $feeds_migrate_importer) {
 
     /** @var FeedsMigrateExecutable $migrate_executable */
     $migrate_executable = $feeds_migrate_importer->getExecutable();
@@ -112,14 +129,14 @@ class Import extends ControllerBase {
         $this->message->display(
           $this->t('Migration failed with source plugin exception: @e',
             ['@e' => $e->getMessage()]), 'error');
-        //        $migration->setStatus(MigrationInterface::STATUS_IDLE);
+        $this->migration->setStatus(MigrationInterface::STATUS_IDLE);
         return MigrationInterface::RESULT_FAILED;
       }
-
     }
 
-    batch_set($batch);
-    return batch_process();
+    $feeds_migrate_importer->lastRan = time();
+    $feeds_migrate_importer->save();
+    return $batch;
   }
 
   /**
@@ -145,7 +162,14 @@ class Import extends ControllerBase {
     }
 
     if (!empty($results[MigrateIdMapInterface::STATUS_IMPORTED]) || !empty($results[MigrateIdMapInterface::STATUS_NEEDS_UPDATE])) {
-      $messenger->addMessage(t('Successfully imported %success items.', ['%success' => count($results[MigrateIdMapInterface::STATUS_IMPORTED]) + count($results[MigrateIdMapInterface::STATUS_NEEDS_UPDATE])]));
+      $count = 0;
+      if (!empty($results[MigrateIdMapInterface::STATUS_IMPORTED])) {
+        $count = count($results[MigrateIdMapInterface::STATUS_IMPORTED]);
+      }
+      if (!empty($results[MigrateIdMapInterface::STATUS_NEEDS_UPDATE])) {
+        $count += count($results[MigrateIdMapInterface::STATUS_NEEDS_UPDATE]);
+      }
+      $messenger->addMessage(t('Successfully imported %success items.', ['%success' => $count]));
     }
 
     if (!empty($results[MigrateIdMapInterface::STATUS_IGNORED])) {

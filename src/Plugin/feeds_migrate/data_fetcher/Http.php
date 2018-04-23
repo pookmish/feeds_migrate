@@ -28,7 +28,7 @@ class Http extends DataFetcherFormPluginBase {
       'url' => [
         '#type' => 'textfield',
         '#title' => $this->t('URL'),
-        '#default_value' => $entity->dataFetcherSettings['http'] ?? '',
+        '#default_value' => $entity->dataFetcherSettings['http']['url'] ?? '',
       ],
     ];
   }
@@ -37,9 +37,9 @@ class Http extends DataFetcherFormPluginBase {
    * {@inheritdoc}
    */
   public function alterMigration(FeedsMigrateImporterInterface $importer, Migration $migration) {
-    if (!empty($importer->dataFetcherSettings['http'])) {
+    if (!empty($importer->dataFetcherSettings['http']['url'])) {
       $source_config = $migration->getSourceConfiguration();
-      $source_config['urls'] = $importer->dataFetcherSettings['http'];
+      $source_config['urls'] = $importer->dataFetcherSettings['http']['url'];
       $migration->set('source', $source_config);
     }
   }

@@ -47,9 +47,12 @@ class FeedsMigrateImporterListBuilder extends ConfigEntityListBuilder {
    * {@inheritdoc}
    */
   public function buildHeader() {
-    $header['label'] = $this->t('Importer');
-    $header['migrator'] = $this->t('Migration');
-    $header['last'] = $this->t('Last Imported');
+    $header = [
+      'label' => $this->t('Importer'),
+      'source' => $this->t('Migration'),
+      'last' => $this->t('Last Imported'),
+      'count' => $this->t('Items'),
+    ];
     return $header + parent::buildHeader();
   }
 
@@ -60,13 +63,20 @@ class FeedsMigrateImporterListBuilder extends ConfigEntityListBuilder {
     /** @var \Drupal\migrate_plus\Entity\Migration $migration */
     $migration = Migration::load($entity->source);
 
-    $data['label'] = $entity->label();
-    $data['migrator'] = $migration->label();
+    $data = [
+      'label' => $entity->label(),
+      'source' => $migration->label(),
+      'last' => $this->t('Never'),
+      'count' => 0,
+    ];
 
-    $data['last'] = $this->t('Never');
     if ($entity->lastRan) {
       $data['last'] = $this->dateFormatter->formatDiff($entity->lastRan, $this->dateTime->getRequestTime(), ['granularity' => 1]);
     }
+
+    /** @var \Drupal\feeds_migrate\FeedsMigrateExecutable $migration */
+    $migration = $entity->getExecutable();
+    $data['count'] = $migration->getCreatedCount();
 
     $row = [
       'class' => $entity->status() ? 'enabled' : 'disabled',

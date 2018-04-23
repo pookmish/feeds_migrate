@@ -63,6 +63,15 @@ entity.feeds_migrate_importer.duplicate_form:
   requirements:
     _permission: 'administer feeds migrate importers'
 
+entity.feeds_migrate_importer.rollback:
+  path: '/admin/content/feeds-migrate/importer/{feeds_migrate_importer}/rollback'
+  defaults:
+    _entity_form: 'feeds_migrate_importer.rollback'
+    _title: Rollback
+  requirements:
+    _permission: 'administer feeds migrate importers'
+    feeds_migrate_importer: '^[a-zA-Z0-9_]+'
+
 entity.feeds_migrate_importer.import:
   path: '/admin/content/feeds-migrate/importer/{feeds_migrate_importer}/import'
   defaults:
@@ -75,12 +84,3 @@ entity.feeds_migrate_importer.import:
     parameters:
       feeds_migrate_importer:
         type: entity:feeds_migrate_importer
-
-entity.feeds_migrate_importer.rollback:
-  path: '/admin/content/feeds-migrate/importer/{feeds_migrate_importer}/rollback'
-  defaults:
-    _entity_form: 'feeds_migrate_importer.rollback'
-    _title: Rollback
-  requirements:
-    _permission: 'administer feeds migrate importers'
-    feeds_migrate_importer: '^[a-zA-Z0-9_]+'
