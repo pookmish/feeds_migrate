@@ -23,14 +23,12 @@ abstract class DataFetcherFormPluginBase extends PluginBase implements DataFetch
    * {@inheritdoc}
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
-    // Nothing to do.
   }
 
   /**
    * {@inheritdoc}
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
-    // Nothing to do.
   }
 
   /**
@@ -38,6 +36,29 @@ abstract class DataFetcherFormPluginBase extends PluginBase implements DataFetch
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+  }
+
+  protected function getFormValue($form, FormStateInterface $form_state) {
+    return $form_state->getValue($this->getValueKey());
+  }
+
+  protected function getValueKey() {
+    return [
+      'dataFetcherSettings',
+      $this->getPluginId(),
+    ];
   }
 
 }

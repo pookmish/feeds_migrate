@@ -20,8 +20,8 @@ use Drupal\migrate\MigrateMessage;
  *       "edit" = "Drupal\feeds_migrate\Form\FeedsMigrateImporterForm",
  *       "delete" = "Drupal\feeds_migrate\Form\FeedsMigrateImporterDeleteForm",
  *       "enable" = "Drupal\feeds_migrate\Form\FeedsMigrateImporterEnableForm",
- *       "disable" =
- *   "Drupal\feeds_migrate\Form\FeedsMigrateImporterDisableForm"
+ *       "disable" = "Drupal\feeds_migrate\Form\FeedsMigrateImporterDisableForm",
+ *       "rollback" = "Drupal\feeds_migrate\Form\FeedsMigrateImporterRollbackForm"
  *     },
  *   },
  *   config_prefix = "importer",
@@ -34,13 +34,11 @@ use Drupal\migrate\MigrateMessage;
  *   links = {
  *     "canonical" = "/admin/content/feeds-migrate/{feeds_migrate_importer}",
  *     "edit-form" = "/admin/content/feeds-migrate/{feeds_migrate_importer}",
- *     "delete-form" =
- *   "/admin/content/feeds-migrate/{feeds_migrate_importer}/delete",
- *     "enable" =
- *   "/admin/content/feeds-migrate/{feeds_migrate_importer}/enable",
- *     "disable" =
- *   "/admin/content/feeds-migrate/{feeds_migrate_importer}/disable",
- *     "import" = "/import/{feeds_migrate_importer}"
+ *     "delete-form" = "/admin/content/feeds-migrate/{feeds_migrate_importer}/delete",
+ *     "enable" = "/admin/content/feeds-migrate/{feeds_migrate_importer}/enable",
+ *     "disable" = "/admin/content/feeds-migrate/{feeds_migrate_importer}/disable",
+ *     "import" = "/admin/content/feeds-migrate/{feeds_migrate_importer}/import",
+ *     "rollback" = "/admin/content/feeds-migrate/{feeds_migrate_importer}/rollback"
  *   }
  * )
  */
@@ -90,12 +88,27 @@ class FeedsMigrateImporter extends ConfigEntityBase implements FeedsMigrateImpor
   public function __construct(array $values, $entity_type) {
     parent::__construct($values, $entity_type);
     if (!empty($this->source)) {
+      /** @var \Drupal\migrate\Plugin\MigrationPluginManager $migration_manager */
       $migration_manager = \Drupal::service('plugin.manager.migration');
 
       /** @var \Drupal\migrate\Plugin\MigrationInterface $migration */
       $migrations = $migration_manager->createInstances($this->source);
       $this->migration = reset($migrations);
     }
+  }
+
+  /**
+   * @param string $plugin_id
+   *   Data fetcher form plugin id.
+   *
+   * @return mixed|null
+   *   Settings if configured.
+   */
+  public function getFetcherSettings($plugin_id) {
+    if (!empty($this->dataFetcherSettings[$plugin_id])) {
+      return $this->dataFetcherSettings[$plugin_id];
+    }
+    return NULL;
   }
 
   /**
@@ -150,6 +163,7 @@ class FeedsMigrateImporter extends ConfigEntityBase implements FeedsMigrateImpor
 
     foreach ($fetcher_plugins->getDefinitions() as $definition) {
       if ($definition['parent'] == $source_configuration['data_fetcher_plugin']) {
+        /** @var \Drupal\feeds_migrate\DataFetcherFormInterface $fetcher_instance */
         $fetcher_instance = $fetcher_plugins->createInstance($definition['id']);
         $fetcher_instance->alterMigration($this, $this->migration);
       }
@@ -169,6 +183,7 @@ class FeedsMigrateImporter extends ConfigEntityBase implements FeedsMigrateImpor
     $auth_plugins = \Drupal::service('plugin.manager.feeds_migrate.authentication_form');
     foreach ($auth_plugins->getDefinitions() as $definition) {
       if ($definition['parent'] == $source_configuration['authentication']['plugin']) {
+        /** @var \Drupal\feeds_migrate\AuthenticationFormInterface $auth_instance */
         $auth_instance = $auth_plugins->createInstance($definition['id']);
         $auth_instance->alterMigration($this, $this->migration);
       }

@@ -21,6 +21,10 @@ interface DataFetcherFormInterface extends PluginFormInterface {
    */
   public function buildForm(array $form, FormStateInterface $form_state);
 
+  public function validateForm(array &$form, FormStateInterface $form_state);
+
+  public function submitForm(array &$form, FormStateInterface $form_state);
+
   /**
    * @param \Drupal\feeds_migrate\FeedsMigrateImporterInterface $importer
    * @param \Drupal\feeds_migrate\FeedsMigrateExecutable $migration

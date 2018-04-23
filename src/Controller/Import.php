@@ -125,18 +125,7 @@ class Import extends ControllerBase {
   public static function batchImportRow(FeedsMigrateExecutable $migrate_executable, Row $row, &$context) {
     $migrate_executable->importRow($row);
     $id_map = $row->getIdMap();
-
-    if ($id_map['destid1']) {
-      $context['results']['success'][] = $row;
-      return;
-    }
-
-    if ($id_map['source_row_status'] == MigrateIdMapInterface::STATUS_FAILED) {
-      $context['results']['failed'][] = $row;
-      return;
-    }
-
-    $context['results']['ignored'][] = $row;
+    $context['results'][$id_map['source_row_status']][] = $row;
   }
 
   /**
@@ -151,16 +140,16 @@ class Import extends ControllerBase {
       $messenger->addMessage(t('No items processed.'));
     }
 
-    if (!empty($results['success'])) {
-      $messenger->addMessage(t('Successfully imported %success items.', ['%success' => count($results['success'])]));
+    if (!empty($results[MigrateIdMapInterface::STATUS_IMPORTED]) || !empty($results[MigrateIdMapInterface::STATUS_NEEDS_UPDATE])) {
+      $messenger->addMessage(t('Successfully imported %success items.', ['%success' => count($results[MigrateIdMapInterface::STATUS_IMPORTED]) + count($results[MigrateIdMapInterface::STATUS_NEEDS_UPDATE])]));
     }
 
-    if (!empty($results['ignored'])) {
-      $messenger->addMessage(t('Skipped %ignored items.', ['%ignored' => count($results['ignored'])]));
+    if (!empty($results[MigrateIdMapInterface::STATUS_IGNORED])) {
+      $messenger->addMessage(t('Skipped %ignored items.', ['%ignored' => count($results[MigrateIdMapInterface::STATUS_IGNORED])]));
     }
 
-    if (!empty($results['failed'])) {
-      $messenger->addMessage(t('Failed to import %failed items', ['%failed' => count($results['failed'])]));
+    if (!empty($results[MigrateIdMapInterface::STATUS_FAILED])) {
+      $messenger->addMessage(t('Failed to import %failed items', ['%failed' => count($results[MigrateIdMapInterface::STATUS_FAILED])]));
     }
   }
 

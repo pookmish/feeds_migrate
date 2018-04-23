@@ -22,23 +22,24 @@ class Http extends DataFetcherFormPluginBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    /** @var FeedsMigrateImporterInterface $entity */
+    /** @var \Drupal\feeds_migrate\Entity\FeedsMigrateImporter $entity */
     $entity = $form_state->getBuildInfo()['callback_object']->getEntity();
-    $element['url'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('URL'),
-      '#default_value' => $entity->dataFetcherSettings['http']['url'] ?: '',
+    return [
+      'url' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('URL'),
+        '#default_value' => $entity->dataFetcherSettings['http'] ?? '',
+      ],
     ];
-    return $element;
   }
 
   /**
    * {@inheritdoc}
    */
   public function alterMigration(FeedsMigrateImporterInterface $importer, Migration $migration) {
-    if (!empty($importer->dataFetcherSettings['http']['url'])) {
+    if (!empty($importer->dataFetcherSettings['http'])) {
       $source_config = $migration->getSourceConfiguration();
-      $source_config['urls'] = $importer->dataFetcherSettings['http']['url'];
+      $source_config['urls'] = $importer->dataFetcherSettings['http'];
       $migration->set('source', $source_config);
     }
   }

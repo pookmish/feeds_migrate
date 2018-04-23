@@ -95,9 +95,11 @@ class FeedsMigrateImporterForm extends EntityForm {
     ];
 
     $sources = [];
+    $fetcher_types = [];
     /** @var Migration $migration */
     foreach (Migration::loadMultiple() as $migration) {
       $sources[$migration->id()] = $migration->label();
+      $fetcher_types[$migration->source['data_fetcher_plugin']][]['value'] = $migration->id();
     }
     $form['source'] = [
       '#type' => 'select',
@@ -177,19 +179,56 @@ class FeedsMigrateImporterForm extends EntityForm {
       ],
     ];
 
+    $this->buildDataFetcherForms($form, $form_state);
+    $this->buildAuthForms($form, $form_state);
+    return $form;
+  }
+
+  /**
+   * @param $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   */
+  protected function buildDataFetcherForms(&$form, FormStateInterface $form_state) {
     $form['dataFetcherSettings'] = [
       '#type' => 'details',
       '#group' => 'plugin_settings',
       '#title' => $this->t('Data Fetcher Settings'),
+      '#description' => $this->t('Select an migration source to configure the fetcher'),
       '#tree' => TRUE,
     ];
+
+    /** @var Migration $migration */
+    foreach (Migration::loadMultiple() as $migration) {
+      $fetcher_types[$migration->source['data_fetcher_plugin']][]['value'] = $migration->id();
+    }
 
     foreach ($this->dataFetcherPluginManager->getDefinitions() as $id => $data_fetcher) {
       $plugin = $this->dataFetcherPluginManager->createInstance($id);
       $element = $plugin->buildForm($form['dataFetcherSettings'], $form_state);
+
+      $element += [
+        '#type' => 'container',
+        '#states' => [
+          'visible' => [
+            ':input[name="source"]' => $fetcher_types[$id],
+          ],
+        ],
+      ];
+
       $form['dataFetcherSettings'][$id] = $element;
     }
+  }
 
+  /**
+   * @param $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   */
+  protected function buildAuthForms(&$form, FormStateInterface $form_state) {
+    if (!$this->moduleHandler->moduleExists('key')) {
+      return;
+    }
     $form['authSettings'] = [
       '#type' => 'details',
       '#group' => 'plugin_settings',
@@ -197,29 +236,29 @@ class FeedsMigrateImporterForm extends EntityForm {
       '#tree' => TRUE,
     ];
 
-    if ($this->moduleHandler->moduleExists('key')) {
-      $form['authSettings']['auth_type'] = [
-        '#type' => 'select',
-        '#title' => $this->t('Authentication Type'),
-        '#options' => [],
-        '#empty_option' => $this->t('- None -'),
-        '#default_value' => key($entity->authSettings ?: []),
-      ];
+    $form['authSettings']['auth_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Authentication Type'),
+      '#options' => [],
+      '#empty_option' => $this->t('- None -'),
+      '#default_value' => key($this->entity->authSettings ?: []),
+    ];
 
-      foreach ($this->authPluginManager->getDefinitions() as $id => $authentication) {
-        $plugin = $this->authPluginManager->createInstance($id);
-        $element = $plugin->buildForm($form['authSettings'], $form_state);
-        $element['secret_key']['#states'] = [
+    foreach ($this->authPluginManager->getDefinitions() as $id => $authentication) {
+      $plugin = $this->authPluginManager->createInstance($id);
+      $element = $plugin->buildForm($form['authSettings'], $form_state);
+      $element += [
+        '#type' => 'container',
+        '#states' => [
           'visible' => [
             ':input[name*="auth_type"]' => ['value' => $id],
           ],
-        ];
-        $form['authSettings'][$id] = $element;
-        $form['authSettings']['auth_type']['#options'][$id] = $authentication['title'];
-      }
+        ],
+      ];
+      $form['authSettings'][$id] = $element;
+      $form['authSettings']['auth_type']['#options'][$id] = $authentication['title'];
     }
 
-    return $form;
   }
 
   /**
@@ -229,23 +268,25 @@ class FeedsMigrateImporterForm extends EntityForm {
     parent::validateForm($form, $form_state);
     $auth_type = $form_state->getValue(['authSettings', 'auth_type']);
     if (empty($auth_type)) {
-      $form_state->unsetValue('authSettings');
+      $form_state->setValue('authSettings', []);
     }
     else {
       $auth_settings = $form_state->getValue('authSettings');
-      foreach (array_keys($auth_settings) as $id) {
-        if ($id != $auth_type) {
-          unset($auth_settings[$id]);
-        }
-      }
-      $form_state->setValue('authSettings', $auth_settings);
+      $form_state->setValue('authSettings', [$auth_type => $auth_settings[$auth_type]]);
+
+      /** @var \Drupal\feeds_migrate\AuthenticationFormInterface $plugin */
+      $plugin = $this->authPluginManager->createInstance($auth_type);
+      $plugin->validateForm($form, $form_state);
     }
 
-    $data_fetcher = $form_state->getValue('dataFetcherSettings');
-    foreach (array_keys($data_fetcher) as $id) {
+    $migration = Migration::load($form_state->getValue('source'));
 
-    }
-    $form_state->setValue('dataFetcherSettings', $data_fetcher);
+    $fetcher_type = $migration->source['data_fetcher_plugin'];
+    $fetcher_settings = $form_state->getValue('dataFetcherSettings');
+    $form_state->setValue('dataFetcherSettings', [$fetcher_type => $fetcher_settings[$fetcher_type]]);
+
+    $plugin = $this->dataFetcherPluginManager->createInstance($fetcher_type);
+    $plugin->validateForm($form, $form_state);
   }
 
   /**

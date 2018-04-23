@@ -5,7 +5,6 @@ namespace Drupal\feeds_migrate;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\key\KeyRepositoryInterface;
-use Drupal\migrate\Plugin\Migration;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -56,15 +55,22 @@ abstract class AuthenticationFormPluginBase extends PluginBase implements Authen
   /**
    * {@inheritdoc}
    */
-  public function buildForm($form, FormStateInterface $form_state) {
-    $entity = $this->getEntity($form_state);
+  public function buildForm(array $complete_form, FormStateInterface $form_state) {
+    return [];
+  }
 
-    $element['secret_key'] = [
-      '#type' => 'key_select',
-      '#title' => $this->t('Secret key'),
-      '#default_value' => $entity->authSettings[$this->getPluginId()]['secret_key'] ?: NULL,
-    ];
-    return $element;
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$element, FormStateInterface $form_state) {
+
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$element, FormStateInterface $form_state) {
+
   }
 
   /**

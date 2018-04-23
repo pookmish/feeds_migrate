@@ -86,6 +86,11 @@ class FeedsMigrateImporterListBuilder extends ConfigEntityListBuilder {
       'weight' => -10,
       'url' => $this->ensureDestination($entity->toUrl('import')),
     ];
+    $operations['rollback'] = [
+      'title' => t('Rollback'),
+      'weight' => -9,
+      'url' => $this->ensureDestination($entity->toUrl('rollback')),
+    ];
     return $operations;
   }
 

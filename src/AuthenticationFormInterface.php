@@ -18,9 +18,14 @@ interface AuthenticationFormInterface extends PluginFormInterface, ContainerFact
    * @param $form
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *
-   * @return mixed
+   * @return array
    */
-  public function buildForm($form, FormStateInterface $form_state);
+  public function buildForm(array $form, FormStateInterface $form_state);
+
+  public function validateForm(array &$form, FormStateInterface $form_state);
+
+  public function submitForm(array &$form, FormStateInterface $form_state);
+
 
   /**
    * @param \Drupal\feeds_migrate\FeedsMigrateImporterInterface $importer
