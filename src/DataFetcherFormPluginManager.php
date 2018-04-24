@@ -31,4 +31,18 @@ class DataFetcherFormPluginManager extends DefaultPluginManager {
     $this->setCacheBackend($cache_backend, 'migrate_plus_plugins_data_fetcher_form');
   }
 
+  /**
+   * Get a simple array of all the plugins.
+   *
+   * @return array
+   *   Keyed array of the defined plugins.
+   */
+  public function getOptions() {
+    $options = [];
+    foreach ($this->getDefinitions() as $definition) {
+      $options[$definition['id']] = $definition['title'];
+    }
+    return $options;
+  }
+
 }

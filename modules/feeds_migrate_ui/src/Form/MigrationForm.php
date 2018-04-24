@@ -2,14 +2,18 @@
 
 namespace Drupal\feeds_migrate_ui\Form;
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityForm;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\EntityWithPluginCollectionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\feeds_migrate\AuthenticationFormPluginManager;
 use Drupal\feeds_migrate\DataFetcherFormPluginManager;
+use Drupal\migrate_plus\Entity\Migration;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -66,6 +70,7 @@ class MigrationForm extends EntityForm {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildForm($form, $form_state);
+    $form['#tree'] = TRUE;
     $entity = $this->entity;
 
     $form['label'] = [
@@ -89,49 +94,13 @@ class MigrationForm extends EntityForm {
       ],
       '#disabled' => !$entity->isNew(),
     ];
-    $form['group'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Group'),
-      '#default_value' => $entity->migration_group,
-    ];
 
-    $auth_options = [];
-    foreach ($this->authPlugins->getDefinitions() as $auth_plugin) {
-      $auth_options[$auth_plugin['id']] = $auth_plugin['title'];
-    }
-    $form['authentication'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Authentication Method'),
-      '#options' => $auth_options,
-      '#empty_option' => $this->t('- None -'),
-      '#ajax' => [
-        'callback' => '::authenticationSettingsForm',
-        'wrapper' => 'authentication-settings',
-        'effect' => 'fade',
-      ],
-    ];
-    $form['authentication_settings'] = [
-      '#type' => 'container',
-      '#prefix' => '<div id="authentication-settings">',
-      '#suffix' => '</div>',
-    ];
-
-    $fetcher_options = [];
-    foreach ($this->fetcherPlugins->getDefinitions() as $fetcher_plugin) {
-      $fetcher_options[$fetcher_plugin['id']] = $fetcher_plugin['title'];
-    }
-    $form['data_fetcher_plugin'] = [
+    $form['source']['data_fetcher_plugin'] = [
       '#type' => 'select',
       '#title' => $this->t('Data Fetcher'),
-      '#options' => $fetcher_options,
+      '#options' => $this->fetcherPlugins->getOptions(),
       '#default_value' => $entity->source['data_fetcher_plugin'] ?: NULL,
       '#required' => TRUE,
-    ];
-
-    $form['data_fetcher']['settings'] = [
-      '#type' => 'container',
-      '#prefix' => '<div id="fetcher-settings">',
-      '#suffix' => '</div>',
     ];
 
     $form['fetcher'] = [];
@@ -145,7 +114,7 @@ class MigrationForm extends EntityForm {
     }
 
     asort($entity_types);
-    $form['entity_type'] = [
+    $form['destination']['plugin'] = [
       '#type' => 'select',
       '#title' => $this->t('Entity Type'),
       '#options' => $entity_types,
@@ -164,40 +133,63 @@ class MigrationForm extends EntityForm {
     foreach ($bundles as &$bundle) {
       $bundle = $bundle['label'];
     }
-    $form['entity_bundle'] = [
+
+    $form['source']['constants']['bundle'] = [
       '#type' => 'select',
       '#title' => $this->t('Entity Bundle'),
       '#options' => $bundles,
-      '#default_value' => $entity->process['bundle'] ?: NULL,
+      '#default_value' => $entity->source['constants']['bundle'] ?: NULL,
       '#required' => TRUE,
       '#prefix' => '<div id="bundle-option">',
       '#suffix' => '</div>',
+      '#weight' => 99,
     ];
 
-    $form['#process'][] = [$this, 'processSettingsForms'];
     return $form;
-  }
-
-  public function processSettingsForms(array &$element, FormStateInterface $form_state, array &$complete_form) {
-    return $element;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function save(array $form, FormStateInterface $form_state) {
-    $form_state->setRedirectUrl(Url::fromRoute('entity.migration.collection'));
-    return parent::save($form, $form_state);
+  protected function copyFormValuesToEntity(EntityInterface $entity, array $form, FormStateInterface $form_state) {
+    $values = $form_state->getValues();
+
+    if ($this->entity instanceof EntityWithPluginCollectionInterface) {
+      // Do not manually update values represented by plugin collections.
+      $values = array_diff_key($values, $this->entity->getPluginCollections());
+    }
+
+    $this->copyNestedFormValuesToEntity($entity, $values);
   }
 
   /**
-   * @param $form
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *
-   * @return mixed
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   * @param $values
+   * @param array $key_path
    */
-  public static function authenticationSettingsForm(&$form, FormStateInterface $form_state) {
-    return $form['authentication_settings'];
+  protected function copyNestedFormValuesToEntity(EntityInterface $entity, $values, $key_path = []) {
+
+    foreach ($values as $key => $value) {
+      $new_path = $key_path;
+
+      if (is_array($value)) {
+        $new_path[] = $key;
+        $this->copyNestedFormValuesToEntity($entity, $value, $new_path);
+        continue;
+      }
+
+      $new_path[] = $key;
+
+      $entity_key = array_shift($new_path);
+      $original_array = $entity->get($entity_key);
+      if (is_array($original_array)) {
+        NestedArray::setValue($original_array, $new_path, $value);
+        $entity->set($entity_key, $original_array);
+        continue;
+      }
+
+      $entity->set($entity_key, $value);
+    }
   }
 
   /**
