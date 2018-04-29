@@ -58,10 +58,6 @@ class MigrationMappingForm extends EntityForm {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildForm($form, $form_state);
-    $form['selector'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Selector'),
-    ];
 
     dpm($this->entity);
 

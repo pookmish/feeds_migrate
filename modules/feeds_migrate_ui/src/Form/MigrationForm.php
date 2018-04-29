@@ -151,6 +151,31 @@ class MigrationForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
+  protected function actions(array $form, FormStateInterface $form_state) {
+    $actions = parent::actions($form, $form_state);
+    $actions['save_continue'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Save and Continue'),
+      '#name' => 'continue',
+      '#submit' => ['::submitForm', '::save', '::continue'],
+    ];
+    return $actions;
+  }
+
+  /**
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @throws \Drupal\Core\Entity\EntityMalformedException
+   */
+  public function continue(array &$form, FormStateInterface $form_state) {
+    $form_state->setRedirect($this->entity->toUrl('mapping-form')
+      ->getRouteName(), ['migration' => $this->entity->id()]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function copyFormValuesToEntity(EntityInterface $entity, array $form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
 
