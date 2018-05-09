@@ -41,7 +41,7 @@ class File extends DataFetcherFormPluginBase {
       'file' => [
         '#type' => 'managed_file',
         '#title' => $this->t('File Upload'),
-        '#default_value' => $importer->getFetcherSettings($this->pluginId)['file'],
+        '#default_value' => method_exists($importer, 'getFetcherSettings') ? $importer->getFetcherSettings($this->pluginId)['file'] : NULL,
         '#upload_validators' => [
           'file_validate_extensions' => ['xml csv json'],
         ],
