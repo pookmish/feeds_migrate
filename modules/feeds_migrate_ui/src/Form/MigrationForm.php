@@ -421,7 +421,7 @@ class MigrationForm extends EntityForm {
                     'selector' => $selector,
                   ];
 
-                  $process["$field/$column"] = $field;
+                  $process["$field/$column"] = "{$field}__$column";
                 }
               }
               else {
@@ -441,8 +441,6 @@ class MigrationForm extends EntityForm {
           break;
       }
     }
-
-    dpm($entity);
   }
 
   protected function cleanEmptyFieldValues(&$values) {
@@ -460,7 +458,7 @@ class MigrationForm extends EntityForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     if ($this->currentStep == self::STEP_FINALIZE) {
-      //      return parent::save($form, $form_state);
+      return parent::save($form, $form_state);
     }
   }
 
