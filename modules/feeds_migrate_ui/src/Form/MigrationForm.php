@@ -7,8 +7,7 @@ use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\Core\Field\Entity\BaseFieldOverride;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\feeds_migrate\AuthenticationFormPluginManager;
 use Drupal\feeds_migrate\DataFetcherFormPluginManager;
@@ -24,7 +23,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class MigrationForm extends EntityForm {
 
   /**
-   * Steps used in form.
+   * Form steps.
    */
   const STEP_ONE = 1;
 
@@ -37,41 +36,60 @@ class MigrationForm extends EntityForm {
   const STEP_FINALIZE = 4;
 
   /**
+   * Current step for the form.
+   *
+   * @var int
+   */
+  protected $currentStep = 1;
+
+  /**
+   * Fill This.
+   *
    * @var \Drupal\feeds_migrate_ui\FeedsMigrateUiParserSuggestion
    */
   protected $parserSuggestion;
 
   /**
+   * Fill This.
+   *
    * @var \Drupal\migrate_plus\AuthenticationPluginManager
    */
   protected $authPlugins;
 
   /**
+   * Fill This.
+   *
    * @var \Drupal\migrate_plus\DataFetcherPluginManager
    */
   protected $fetcherPlugins;
 
   /**
+   * Fill This.
+   *
    * @var \Drupal\feeds_migrate_ui\FeedsMigrateUiFieldProcessorManager
    */
   protected $fieldProcessorManager;
 
   /**
+   * Fill This.
+   *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
 
   /**
+   * Fill This.
+   *
    * @var \Drupal\Core\Entity\EntityFieldManager
    */
   protected $fieldManager;
 
   /**
+   * Fill This.
+   *
    * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
    */
   protected $bundleManager;
-
-  protected $currentStep = 4;
 
   /**
    * {@inheritdoc}
@@ -127,7 +145,7 @@ class MigrationForm extends EntityForm {
    * {@inheritdoc}
    */
   protected function actions(array $form, FormStateInterface $form_state) {
-    if ($this->currentStep == self::STEP_ONE && $this->entity->isNew()) {
+    if ($this->currentStep == self::STEP_ONE) {
       return [];
     }
 
@@ -233,7 +251,6 @@ class MigrationForm extends EntityForm {
       $fether_plugin = $this->fetcherPlugins->createInstance($plugin_id);
     }
     catch (\Exception $e) {
-      $this->currentStep++;
       $form_state->setRebuild();
       return;
     }
@@ -267,10 +284,14 @@ class MigrationForm extends EntityForm {
         $entity_types[$entity_id] = $definition->getLabel();
       }
     }
+
+    $chosen_type = $form_state->getValue('entity_type') ?: $this->getEntityTypeFromMigration();
+
     $form['entity_type'] = [
       '#type' => 'select',
       '#title' => $this->t('Entity Type'),
       '#options' => $entity_types,
+      '#default_value' => $chosen_type,
       '#empty_option' => $this->t('- Choose -'),
       '#required' => TRUE,
       '#ajax' => [
@@ -283,10 +304,13 @@ class MigrationForm extends EntityForm {
       '#prefix' => '<div id="entity-bundle">',
       '#suffix' => '</div>',
     ];
-    if ($chosen_type = $form_state->getValue('entity_type')) {
+    $bundle = $this->getEntityBunddleFromMigration();
+
+    if ($chosen_type) {
       $form['entity_bundle']['#type'] = 'select';
       $form['entity_bundle']['#title'] = $this->t('Entity Bundle');
       $form['entity_bundle']['#required'] = TRUE;
+      $form['entity_bundle']['#default_value'] = $bundle;
       foreach ($this->bundleManager->getBundleInfo($chosen_type) as $id => $bundle) {
         $form['entity_bundle']['#options'][$id] = $bundle['label'];
       }
@@ -315,36 +339,126 @@ class MigrationForm extends EntityForm {
    *   Complete form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Current form state.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   protected function mapEntityFieldsStep(array &$form, FormStateInterface $form_state) {
-    $bundle_fields = $this->fieldManager->getFieldDefinitions($this->getEntityTypeFromMigration(), $this->getEntityBunddleFromMigration());
+    /** @var \Drupal\Core\Entity\Sql\SqlContentEntityStorage $entity_storage */
+    $entity_storage = $this->entityTypeManager->getStorage($this->getEntityTypeFromMigration());
+    /** @var \Drupal\Core\Entity\ContentEntityType $entity_type */
+    $entity_type = $entity_storage->getEntityType();
+
+    $bundle_fields = $this->fieldManager->getFieldDefinitions($entity_type->id(), $this->getEntityBunddleFromMigration());
+
+    $good_keys = ['published', 'label', 'uid'];
+    foreach ($entity_type->get('entity_keys') as $key => $field_name) {
+      if (in_array($key, $good_keys)) {
+        continue;
+      }
+      unset($bundle_fields[$field_name]);
+    }
+
+
+    $table = [
+      '#type' => 'table',
+      '#header' => [
+        $this->t('Field'),
+        $this->t('Selectors'),
+        $this->t('Processing Settings'),
+      ],
+    ];
 
     /** @var \Drupal\field\Entity\FieldConfig $field */
-    foreach ($bundle_fields as $field_id => $field) {
-      $group = 'custom';
-      if ($field instanceof BaseFieldDefinition || $field instanceof BaseFieldOverride) {
-        $group = 'base';
-      }
+    foreach ($bundle_fields as $field_name => $field) {
+      $table[$field_name] = $this->buildFieldRow($field, $form, $form_state);
+    }
 
-      if (!isset($form['fields'][$group])) {
-        $form['fields'][$group] = [
-          '#type' => 'fieldset',
-          '#title' => $group,
-        ];
-      }
+    $form['mapping'] = $table;
+  }
 
-      /** @var \Drupal\feeds_migrate_ui\FeedsMigrateUiFieldProcessorInterface $plugin */
-      $plugin = $this->fieldProcessorManager->getFieldPlugin($field, $this->entity);
-      $form['fields'][$group][$field_id] = $plugin->buildConfigurationForm($form, $form_state);
+  /**
+   * Build the table field row.
+   *
+   * @param FieldDefinitionInterface $field
+   *   Field definitino.
+   * @param array $form
+   *   Current form.
+   * @param FormStateInterface $form_state
+   *   Current form state.
+   *
+   * @return array
+   *   The built field row.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   */
+  protected function buildFieldRow(FieldDefinitionInterface $field, array $form, FormStateInterface $form_state) {
+    $field_name = $field->getName();
+    $label = $field->getLabel();
+
+    $field_row = [
+      'human_name' => [
+        'data' => [
+          '#plain_text' => $label,
+        ],
+      ],
+    ];
+
+    /** @var \Drupal\feeds_migrate_ui\FeedsMigrateUiFieldProcessorInterface $plugin */
+    $plugin = $this->fieldProcessorManager->getFieldPlugin($field, $this->entity);
+    $field_row['selectors']['data'] = $plugin->buildConfigurationForm($form, $form_state);
+
+    // Base button element for the various plugin settings actions.
+    $base_button = [
+      '#submit' => ['::multistepSubmit'],
+      '#ajax' => [
+        'callback' => '::multistepAjax',
+        'wrapper' => 'field-display-overview-wrapper',
+        'effect' => 'fade',
+      ],
+      '#field_name' => $field_name,
+    ];
+    $field_row['settings_edit']['data'] = $base_button;
+
+    $field_row['settings_edit']['data'] += [
+      '#type' => 'image_button',
+      '#name' => $field_name . '_settings_edit',
+      '#src' => 'core/misc/icons/787878/cog.svg',
+      '#attributes' => [
+        'class' => ['field-plugin-settings-edit'],
+        'alt' => $this->t('Edit'),
+      ],
+      '#op' => 'edit',
+      // Do not check errors for the 'Edit' button, but make sure we get
+      // the value of the 'plugin type' select.
+      '#limit_validation_errors' => [['fields', $field_name, 'type']],
+      '#prefix' => '<div class="field-plugin-settings-edit-wrapper">',
+      '#suffix' => '</div>',
+    ];
+
+    return $field_row;
+  }
+
+  /**
+   * Find the entity type the migration is importing into.
+   *
+   * @return string
+   *   Machine name of the entity type eg 'node'.
+   */
+  protected function getEntityTypeFromMigration() {
+    $destination = $this->entity->destination['plugin'];
+    if (strpos($destination, ':') !== FALSE) {
+      list(, $entity_type) = explode(':', $destination);
+      return $entity_type;
     }
   }
 
-  protected function getEntityTypeFromMigration() {
-    $destination = $this->entity->destination['plugin'];
-    list(, $entity_type) = explode(':', $destination);
-    return $entity_type;
-  }
-
+  /**
+   * The bundle the migration is importing into.
+   *
+   * @return string
+   *   Entity type bundle eg 'article'.
+   */
   protected function getEntityBunddleFromMigration() {
     if (!empty($this->entity->source['constants']['bundle'])) {
       return $this->entity->source['constants']['bundle'];
@@ -371,16 +485,17 @@ class MigrationForm extends EntityForm {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $storage = $form_state->getStorage();
-    $form_state->cleanValues();
-    $storage['submitted_data'][$this->currentStep] = $form_state->getValues();
-    $form_state->setStorage($storage);
-
     if ($this->currentStep == self::STEP_FINALIZE) {
       parent::submitForm($form, $form_state);
+
+      \Drupal::messenger()
+        ->addMessage($this->t('Saved Migration %label', ['%label' => $this->entity->label()]));
+      /** @var \Drupal\migrate_plus\Entity\Migration $entity */
+      $form_state->setRedirect('entity.migration.collection');
       return;
     }
 
+    $form_state->cleanValues();
     $this->currentStep++;
     $form_state->setRebuild();
   }
@@ -389,70 +504,71 @@ class MigrationForm extends EntityForm {
    * {@inheritdoc}
    */
   protected function copyFormValuesToEntity(EntityInterface $entity, array $form, FormStateInterface $form_state) {
-    $storage = $form_state->getStorage();
-    $this->cleanEmptyFieldValues($storage);
-    foreach ($storage['submitted_data'] as $step => $step_data) {
-      switch ($step) {
-        case self::STEP_ONE:
-          $entity->set('label', $step_data['label']);
-          $entity->set('id', $step_data['id']);
+    switch ($this->currentStep) {
+      case self::STEP_ONE:
+        parent::copyFormValuesToEntity($entity, $form, $form_state);
+        break;
 
-          break;
+      case self::STEP_TWO:
+        // TODO call plugin submit.
+        //        $source = $entity->get('source') ?: [];
+        //        $source['data_fetcher_plugin'] = $step_data['fetcher_plugin'];
+        //        $source['urls'] = $step_data[$source['data_fetcher_plugin']]['url'];
+        //        $entity->set('source', $source);
+        break;
 
-        case self::STEP_TWO:
+      case self::STEP_THREE:
+        if ($entity_type = $form_state->getValue('entity_type')) {
+          $entity->set('destination', ['plugin' => 'entity:' . $entity_type]);
+        }
+
+        if ($entity_bundle = $form_state->getValue('entity_bundle')) {
           $source = $entity->get('source') ?: [];
-          $source['data_fetcher_plugin'] = $step_data['fetcher_plugin'];
-          // TODO call plugin submit.
-          $source['urls'] = $step_data[$source['data_fetcher_plugin']]['url'];
+          $source['constants']['bundle'] = $entity_bundle;
           $entity->set('source', $source);
-          break;
-
-        case self::STEP_THREE:
-          $entity->set('destination', ['plugin' => 'entity:' . $step_data['entity_type']]);
 
           $process = $entity->get('process') ?: [];
           $process['bundle'] = 'constants/bundle';
           $entity->set('process', $process);
+        }
 
-          $source = $entity->get('source') ?: [];
-          $source['constants']['bundle'] = $step_data['entity_bundle'];
-          $entity->set('source', $source);
+        break;
 
-          break;
+      default:
+        $values = $form_state->getValues();
+        $this->cleanEmptyFieldValues($values);
 
-        default:
-          $process = $entity->get('process') ?: [];
-          $source = $entity->get('source') ?: [];
+        $process = [];
+        $source = $entity->get('source') ?: [];
+        $source['fields'] = [];
 
-          foreach ($step_data['fields'] as $fields) {
-            foreach ($fields as $field => $field_paths) {
-              if (is_array($field_paths)) {
-                foreach ($field_paths as $column => $selector) {
-                  $source['fields'][] = [
-                    'name' => "{$field}__$column",
-                    'label' => "{$field}__$column",
-                    'selector' => $selector,
-                  ];
+        foreach ($values['mapping'] as $field => $field_data) {
+          $selectors = $field_data['selectors']['data'];
 
-                  $process["$field/$column"] = "{$field}__$column";
-                }
-              }
-              else {
-                $source['fields'][] = [
-                  'name' => $field,
-                  'label' => $field,
-                  'selector' => $field_paths,
-                ];
-                $process[$field] = $field;
-              }
+          if (is_string($selectors)) {
+            $source['fields'][] = [
+              'name' => $field,
+              'label' => $field,
+              'selector' => $selectors,
+            ];
+            $process[$field] = $field;
+          }
+          else {
+            foreach ($selectors as $column => $selector) {
+              $source['fields'][] = [
+                'name' => "{$field}__$column",
+                'label' => "{$field}__$column",
+                'selector' => $selector,
+              ];
+
+              $process["$field/$column"] = "{$field}__$column";
             }
           }
+        }
 
-          $entity->set('process', $process);
-          $entity->set('source', $source);
-
-          break;
-      }
+        $entity->set('process', $process);
+        $entity->set('source', $source);
+        break;
     }
   }
 

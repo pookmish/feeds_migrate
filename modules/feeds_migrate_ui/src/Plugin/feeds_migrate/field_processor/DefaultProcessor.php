@@ -4,6 +4,7 @@ namespace Drupal\feeds_migrate_ui\Plugin\feeds_migrate\field_processor;
 
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\Entity\BaseFieldOverride;
+use Drupal\Core\Field\FieldConfigInterface;
 use Drupal\Core\Field\FieldTypePluginManager;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\feeds_migrate_ui\FeedsMigrateUiFieldProcessorBase;
@@ -21,6 +22,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class DefaultProcessor extends FeedsMigrateUiFieldProcessorBase {
 
   /**
+   * Field Type Manager Service.
+   *
    * @var \Drupal\Core\Field\FieldTypePluginManager
    */
   protected $fieldTypeManager;
@@ -70,43 +73,48 @@ class DefaultProcessor extends FeedsMigrateUiFieldProcessorBase {
     $element = [
       '#type' => 'textfield',
       '#title' => $field->getLabel(),
+      '#title_display' => 'invisible',
       '#default_value' => $this->getFieldSelector($field->getName()),
     ];
     return $element;
   }
 
   /**
-   * @param $field
+   * Build a form for the field config.
+   *
+   * @param FieldConfigInterface $field
+   *   Field config entity.
    *
    * @return array
-   * @throws \Drupal\Component\Plugin\Exception\PluginException
-   * @throws \Drupal\Core\TypedData\Exception\MissingDataException
+   *   Form element for the field.
    */
-  protected function buildContentFieldForm($field) {
-    $item_instance = $this->fieldTypeManager->createInstance($field->getType(), ['field_definition' => $field]);
-    $field_properties = $item_instance->getProperties();
-
-    $element = [
-      '#type' => 'textfield',
-      '#title' => $field->getLabel(),
-      '#default_value' => $this->getFieldSelector($field->getName()),
-    ];
-
-    if (count($field_properties) > 1) {
-      $element = [
-        '#type' => 'fieldset',
-        '#title' => $field->getLabel(),
-      ];
-
-      foreach ($field_properties as $column_name => $property) {
-        $element[$column_name] = [
-          '#type' => 'textfield',
-          '#title' => $column_name,
-          '#default_value' => $this->getFieldSelector($field->getName() . '/' . $column_name),
-        ];
-      }
+  protected function buildContentFieldForm(FieldConfigInterface $field) {
+    try {
+      $item_instance = $this->fieldTypeManager->createInstance($field->getType(), ['field_definition' => $field]);
+      $field_properties = $item_instance->getProperties();
+    }
+    catch (\Exception $e) {
+      return [];
     }
 
+    if (count($field_properties) == 1) {
+      $element = [
+        '#type' => 'textfield',
+        '#title' => $field->getLabel(),
+        '#title_display' => 'invisible',
+        '#default_value' => $this->getFieldSelector($field->getName()),
+      ];
+      return $element;
+    }
+
+    $element = [];
+    foreach ($field_properties as $column_name => $property) {
+      $element[$column_name] = [
+        '#type' => 'textfield',
+        '#title' => $column_name,
+        '#default_value' => $this->getFieldSelector($field->getName() . '/' . $column_name),
+      ];
+    }
     return $element;
   }
 
