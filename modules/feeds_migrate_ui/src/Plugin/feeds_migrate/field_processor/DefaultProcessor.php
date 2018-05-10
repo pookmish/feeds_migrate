@@ -70,7 +70,7 @@ class DefaultProcessor extends FeedsMigrateUiFieldProcessorBase {
     $element = [
       '#type' => 'textfield',
       '#title' => $field->getLabel(),
-      '#default_value' => $this->getSourceConfig($field->getName()),
+      '#default_value' => $this->getFieldSelector($field->getName()),
     ];
     return $element;
   }
@@ -89,7 +89,7 @@ class DefaultProcessor extends FeedsMigrateUiFieldProcessorBase {
     $element = [
       '#type' => 'textfield',
       '#title' => $field->getLabel(),
-      '#default_value' => $this->getSourceConfig($field->getName()),
+      '#default_value' => $this->getFieldSelector($field->getName()),
     ];
 
     if (count($field_properties) > 1) {
@@ -102,7 +102,7 @@ class DefaultProcessor extends FeedsMigrateUiFieldProcessorBase {
         $element[$column_name] = [
           '#type' => 'textfield',
           '#title' => $column_name,
-          '#default_value' => $this->getSourceConfig($field->getName() . '/' . $column_name),
+          '#default_value' => $this->getFieldSelector($field->getName() . '/' . $column_name),
         ];
       }
     }

@@ -41,8 +41,7 @@ abstract class FeedsMigrateUiFieldProcessorBase extends PluginBase implements Fe
     // TODO: Implement submitConfigurationForm() method.
   }
 
-  protected function getSourceConfig($field_name) {
-    dpm($field_name);
+  protected function getFieldSelector($field_name) {
     if (!isset($this->configuration['entity']->process[$field_name])) {
       return NULL;
     }
