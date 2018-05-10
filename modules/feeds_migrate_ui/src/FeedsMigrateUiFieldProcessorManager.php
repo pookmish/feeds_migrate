@@ -6,6 +6,7 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
+use Drupal\migrate_plus\Entity\MigrationInterface;
 
 /**
  * Class FeedsMigrateUiFieldProcessorManager.
@@ -47,13 +48,19 @@ class FeedsMigrateUiFieldProcessorManager extends DefaultPluginManager {
    *
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
-  public function getFieldPlugin(FieldDefinitionInterface $field) {
+  public function getFieldPlugin(FieldDefinitionInterface $field, MigrationInterface $entity) {
+    $config = [
+      'field' => $field,
+      'entity' => $entity,
+    ];
+
     foreach ($this->getDefinitions() as $plugin_definition) {
       if (in_array($field->getType(), $plugin_definition['fields'])) {
-        return $this->createInstance($plugin_definition['id'], ['field' => $field]);
+        return $this->createInstance($plugin_definition['id'], $config);
       }
     }
-    return $this->createInstance('default_processor', ['field' => $field]);
+
+    return $this->createInstance('default_processor', $config);
   }
 
 }

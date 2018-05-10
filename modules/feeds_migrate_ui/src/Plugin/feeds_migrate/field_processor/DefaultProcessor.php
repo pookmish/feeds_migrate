@@ -7,7 +7,6 @@ use Drupal\Core\Field\Entity\BaseFieldOverride;
 use Drupal\Core\Field\FieldTypePluginManager;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\feeds_migrate_ui\FeedsMigrateUiFieldProcessorBase;
-use Drupal\Tests\Core\Field\TestBaseFieldDefinitionInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -71,14 +70,19 @@ class DefaultProcessor extends FeedsMigrateUiFieldProcessorBase {
     $element = [
       '#type' => 'textfield',
       '#title' => $field->getLabel(),
+      '#default_value' => $this->getSourceConfig($field->getName()),
     ];
     return $element;
   }
 
+  /**
+   * @param $field
+   *
+   * @return array
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   * @throws \Drupal\Core\TypedData\Exception\MissingDataException
+   */
   protected function buildContentFieldForm($field) {
-    /** @var \Drupal\Core\Field\FieldTypePluginManager $field_type_manager */
-    $field_type_manager = \Drupal::service('plugin.manager.field.field_type');
-
     $item_instance = $this->fieldTypeManager->createInstance($field->getType(), ['field_definition' => $field]);
     $field_properties = $item_instance->getProperties();
 
@@ -97,6 +101,7 @@ class DefaultProcessor extends FeedsMigrateUiFieldProcessorBase {
         $element[$column_name] = [
           '#type' => 'textfield',
           '#title' => $column_name,
+          '#default_value' => $this->getSourceConfig($field->getName() . '/' . $column_name),
         ];
       }
     }

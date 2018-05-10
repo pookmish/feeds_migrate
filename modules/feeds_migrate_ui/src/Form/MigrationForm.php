@@ -14,7 +14,6 @@ use Drupal\feeds_migrate\AuthenticationFormPluginManager;
 use Drupal\feeds_migrate\DataFetcherFormPluginManager;
 use Drupal\feeds_migrate_ui\FeedsMigrateUiFieldProcessorManager;
 use Drupal\feeds_migrate_ui\FeedsMigrateUiParserSuggestion;
-use Drupal\migrate_plus\Entity\Migration;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -128,7 +127,7 @@ class MigrationForm extends EntityForm {
    * {@inheritdoc}
    */
   protected function actions(array $form, FormStateInterface $form_state) {
-    if ($this->currentStep == self::STEP_ONE) {
+    if ($this->currentStep == self::STEP_ONE && $this->entity->isNew()) {
       return [];
     }
 
@@ -145,6 +144,7 @@ class MigrationForm extends EntityForm {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildForm($form, $form_state);
     $form['#tree'] = TRUE;
+
     switch ($this->currentStep) {
       case self::STEP_ONE:
         $this->getDataFetcherStep($form, $form_state);
@@ -317,7 +317,7 @@ class MigrationForm extends EntityForm {
    *   Current form state.
    */
   protected function mapEntityFieldsStep(array &$form, FormStateInterface $form_state) {
-    $bundle_fields = $this->fieldManager->getFieldDefinitions('node', 'stanford_event');
+    $bundle_fields = $this->fieldManager->getFieldDefinitions($this->getEntityTypeFromMigration(), $this->getEntityBunddleFromMigration());
 
     /** @var \Drupal\field\Entity\FieldConfig $field */
     foreach ($bundle_fields as $field_id => $field) {
@@ -334,8 +334,20 @@ class MigrationForm extends EntityForm {
       }
 
       /** @var \Drupal\feeds_migrate_ui\FeedsMigrateUiFieldProcessorInterface $plugin */
-      $plugin = $this->fieldProcessorManager->getFieldPlugin($field);
+      $plugin = $this->fieldProcessorManager->getFieldPlugin($field, $this->entity);
       $form['fields'][$group][$field_id] = $plugin->buildConfigurationForm($form, $form_state);
+    }
+  }
+
+  protected function getEntityTypeFromMigration() {
+    $destination = $this->entity->destination['plugin'];
+    list(, $entity_type) = explode(':', $destination);
+    return $entity_type;
+  }
+
+  protected function getEntityBunddleFromMigration() {
+    if (!empty($this->entity->source['constants']['bundle'])) {
+      return $this->entity->source['constants']['bundle'];
     }
   }
 
@@ -390,7 +402,8 @@ class MigrationForm extends EntityForm {
         case self::STEP_TWO:
           $source = $entity->get('source') ?: [];
           $source['data_fetcher_plugin'] = $step_data['fetcher_plugin'];
-          $source['urls'] = $step_data['url'];
+          // TODO call plugin submit.
+          $source['urls'] = $step_data[$source['data_fetcher_plugin']]['url'];
           $entity->set('source', $source);
           break;
 
@@ -443,6 +456,12 @@ class MigrationForm extends EntityForm {
     }
   }
 
+  /**
+   * Remove empty values.
+   *
+   * @param mixed $values
+   *   Anything other than an object.
+   */
   protected function cleanEmptyFieldValues(&$values) {
     if (!is_array($values)) {
       return;
