@@ -11,7 +11,7 @@ entity.migration.add_form:
   path: '/admin/structure/feeds-migrate/sources/add'
   defaults:
     _entity_form: 'migration.add'
-    _title: 'Add Importer'
+    _title_callback: 'Drupal\feeds_migrate_ui\Form\MigrationForm::getTitle'
   requirements:
     _permission: 'administer feeds migrate importers'
 
@@ -19,7 +19,7 @@ entity.migration.edit_form:
   path: '/admin/structure/feeds-migrate/sources/{migration}'
   defaults:
     _entity_form: 'migration.edit'
-    _title: 'Edit Importer'
+    _title_callback: 'Drupal\feeds_migrate_ui\Form\MigrationForm::getTitle'
   requirements:
     _permission: 'administer feeds migrate importers'
 

@@ -7,14 +7,14 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 
 /**
- * Class DataFetcherFormPluginManager.
+ * Class AuthenticationFormPluginManager.
  *
  * @package Drupal\feeds_migrate
  */
-class DataFetcherFormPluginManager extends DefaultPluginManager {
+class DataParserPluginManager extends DefaultPluginManager {
 
   /**
-   * Constructs a new data_fetcherPluginManager.
+   * Constructs a new AuthenticationPluginManager.
    *
    * @param \Traversable $namespaces
    *   An object that implements \Traversable which contains the root paths
@@ -25,24 +25,10 @@ class DataFetcherFormPluginManager extends DefaultPluginManager {
    *   The module handler to invoke the alter hook with.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/feeds_migrate/data_fetcher', $namespaces, $module_handler, 'Drupal\feeds_migrate\DataFetcherFormInterface', 'Drupal\feeds_migrate\Annotation\DataFetcherForm');
+    parent::__construct('Plugin/feeds_migrate/data_parser', $namespaces, $module_handler, 'Drupal\feeds_migrate\DataParserFormInterface', 'Drupal\feeds_migrate\Annotation\DataParserForm');
 
-    $this->alterInfo('data_fetcher_form_info');
-    $this->setCacheBackend($cache_backend, 'migrate_plus_plugins_data_fetcher_form');
-  }
-
-  /**
-   * Get a simple array of all the plugins.
-   *
-   * @return array
-   *   Keyed array of the defined plugins.
-   */
-  public function getOptions() {
-    $options = [];
-    foreach ($this->getDefinitions() as $definition) {
-      $options[$definition['id']] = $definition['title'];
-    }
-    return $options;
+    $this->alterInfo('feeds_migrate_data_parser_info');
+    $this->setCacheBackend($cache_backend, 'feeds_migrate_data_parser');
   }
 
 }

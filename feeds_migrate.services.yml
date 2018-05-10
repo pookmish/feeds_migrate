@@ -6,5 +6,5 @@ services:
     class: Drupal\feeds_migrate\DataFetcherFormPluginManager
     parent: default_plugin_manager
   plugin.manager.feeds_migrate.data_parser_form:
-    class: Drupal\feeds_migrate\DataParserFormPluginManager
+    class: Drupal\feeds_migrate\DataParserPluginManager
     parent: default_plugin_manager
