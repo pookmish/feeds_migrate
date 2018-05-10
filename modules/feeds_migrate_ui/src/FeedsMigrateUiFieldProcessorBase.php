@@ -42,9 +42,11 @@ abstract class FeedsMigrateUiFieldProcessorBase extends PluginBase implements Fe
   }
 
   protected function getSourceConfig($field_name) {
+    dpm($field_name);
     if (!isset($this->configuration['entity']->process[$field_name])) {
       return NULL;
     }
+
     $process = $this->configuration['entity']->process[$field_name];
     if (is_string($process)) {
       return $this->getSourceSelector($process);

@@ -89,6 +89,7 @@ class DefaultProcessor extends FeedsMigrateUiFieldProcessorBase {
     $element = [
       '#type' => 'textfield',
       '#title' => $field->getLabel(),
+      '#default_value' => $this->getSourceConfig($field->getName()),
     ];
 
     if (count($field_properties) > 1) {

@@ -71,7 +71,7 @@ class MigrationForm extends EntityForm {
    */
   protected $bundleManager;
 
-  protected $currentStep = self::STEP_ONE;
+  protected $currentStep = 4;
 
   /**
    * {@inheritdoc}
