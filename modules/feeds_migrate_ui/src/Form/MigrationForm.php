@@ -251,7 +251,6 @@ class MigrationForm extends EntityForm {
    */
   protected function inputDataStep(array &$form, FormStateInterface $form_state) {
     $plugin_id = $form_state->getTriggeringElement()['#name'];
-    $plugin_id = 'http';
 
     try {
       /** @var \Drupal\feeds_migrate\DataFetcherFormInterface $fether_plugin */
@@ -659,7 +658,15 @@ class MigrationForm extends EntityForm {
     ];
 
     $source = $entity->get('source') ?: [];
-    $source['fields'] = [];
+    $id_name = key($source['ids']);
+    $guid_selector = NULL;
+    foreach ($source['fields'] as $delta => $field) {
+      if ($field['name'] == $id_name) {
+        $guid_selector = $field;
+        break;
+      }
+    }
+    $source['fields'] = $guid_selector ? [$guid_selector] : [];
 
     foreach ($values['mapping'] as $field => $field_data) {
       $selectors = $field_data['selectors']['data'];

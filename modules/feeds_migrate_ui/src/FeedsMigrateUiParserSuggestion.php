@@ -36,8 +36,6 @@ class FeedsMigrateUiParserSuggestion {
 
   public function getSuggestedParser($data) {
     $headers = get_headers($data);
-    dpm($data);
-    dpm($headers);
     foreach ($headers as $header) {
       if (strpos($header, 'Content-Type') !== FALSE) {
         if (strpos($header, 'xml')) {
