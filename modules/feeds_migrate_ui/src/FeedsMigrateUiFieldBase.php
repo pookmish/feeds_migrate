@@ -11,7 +11,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @package Drupal\feeds_migrate_ui
  */
-abstract class FeedsMigrateUiFieldProcessorBase extends PluginBase implements FeedsMigrateUiFieldProcessorInterface {
+abstract class FeedsMigrateUiFieldBase extends PluginBase implements FeedsMigrateUiFieldInterface {
 
   /**
    * {@inheritdoc}

@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\feeds_migrate\DataFetcherFormPluginBase;
 use Drupal\feeds_migrate\FeedsMigrateImporterInterface;
 use Drupal\migrate\Plugin\Migration;
+use Drupal\migrate_plus\Entity\Migration as MigrationEntity;
 
 /**
  * Provides basic authentication for the HTTP resource.
@@ -24,11 +25,16 @@ class Http extends DataFetcherFormPluginBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     /** @var \Drupal\feeds_migrate\Entity\FeedsMigrateImporter $entity */
     $entity = $form_state->getBuildInfo()['callback_object']->getEntity();
+    $default_value = $entity->dataFetcherSettings['http']['url'] ?? '';
+    if ($entity instanceof MigrationEntity) {
+      $source = $entity->get('source');
+      $default_value = $source['urls'] ?: '';
+    }
     return [
       'url' => [
         '#type' => 'textfield',
         '#title' => $this->t('URL'),
-        '#default_value' => $entity->dataFetcherSettings['http']['url'] ?? '',
+        '#default_value' => $default_value,
       ],
     ];
   }

@@ -2,6 +2,7 @@
 
 namespace Drupal\feeds_migrate;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginBase;
 
@@ -10,7 +11,7 @@ use Drupal\Core\Plugin\PluginBase;
  *
  * @package Drupal\feeds_migrate
  */
-abstract class DataParserFormBase extends PluginBase implements FeedsMigrateParserFormInterface {
+abstract class DataParserFormBase extends PluginBase implements DataParserFormInterface {
 
   /**
    * {@inheritdoc}
@@ -22,15 +23,10 @@ abstract class DataParserFormBase extends PluginBase implements FeedsMigratePars
   /**
    * {@inheritdoc}
    */
-  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
-    // TODO: Implement validateConfigurationForm() method.
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
-    // TODO: Implement submitConfigurationForm() method.
+  public function copyFormValuesToEntity(EntityInterface $entity, array $form, FormStateInterface $form_state) {
+    $values = $form_state->getValue(['parser', $this->getPluginId()]);
+    $source = $entity->get('source') ?: [];
+    $entity->set('source', array_merge($source, $values));
   }
 
 }

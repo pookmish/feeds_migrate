@@ -14,7 +14,7 @@ use Drupal\Component\Annotation\Plugin;
  *
  * @Annotation
  */
-class FeedsMigrateUiFieldProcessor extends Plugin {
+class FeedsMigrateUiField extends Plugin {
 
   /**
    * The plugin ID.

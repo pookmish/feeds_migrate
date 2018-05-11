@@ -11,7 +11,8 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\feeds_migrate\AuthenticationFormPluginManager;
 use Drupal\feeds_migrate\DataFetcherFormPluginManager;
-use Drupal\feeds_migrate_ui\FeedsMigrateUiFieldProcessorManager;
+use Drupal\feeds_migrate\DataParserPluginManager;
+use Drupal\feeds_migrate_ui\FeedsMigrateUiFieldManager;
 use Drupal\feeds_migrate_ui\FeedsMigrateUiParserSuggestion;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -40,7 +41,7 @@ class MigrationForm extends EntityForm {
    *
    * @var int
    */
-  protected $currentStep = 1;
+  protected $currentStep = self::STEP_ONE;
 
   /**
    * Fill This.
@@ -92,14 +93,22 @@ class MigrationForm extends EntityForm {
   protected $bundleManager;
 
   /**
+   * Fill This.
+   *
+   * @var \Drupal\feeds_migrate\DataParserPluginManager
+   */
+  protected $parserManager;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
     return new static(
+      $container->get('plugin.manager.feeds_migrate.data_parser_form'),
       $container->get('feeds_migrate_ui.parser_suggestion'),
       $container->get('plugin.manager.feeds_migrate.authentication_form'),
       $container->get('plugin.manager.feeds_migrate.data_fetcher_form'),
-      $container->get('plugin.manager.feeds_migrate_ui.field_processor'),
+      $container->get('plugin.manager.feeds_migrate_ui.field'),
       $container->get('entity_type.manager'),
       $container->get('entity_type.bundle.info'),
       $container->get('entity_field.manager')
@@ -109,7 +118,8 @@ class MigrationForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function __construct(FeedsMigrateUiParserSuggestion $parser_suggestion, AuthenticationFormPluginManager $authentication_plugins, DataFetcherFormPluginManager $fetcher_plugins, FeedsMigrateUiFieldProcessorManager $field_processor, EntityTypeManagerInterface $entity_type_manager, EntityTypeBundleInfoInterface $entity_bundle, EntityFieldManager $field_manager) {
+  public function __construct(DataParserPluginManager $parser_manager, FeedsMigrateUiParserSuggestion $parser_suggestion, AuthenticationFormPluginManager $authentication_plugins, DataFetcherFormPluginManager $fetcher_plugins, FeedsMigrateUiFieldManager $field_processor, EntityTypeManagerInterface $entity_type_manager, EntityTypeBundleInfoInterface $entity_bundle, EntityFieldManager $field_manager) {
+    $this->parserManager = $parser_manager;
     $this->parserSuggestion = $parser_suggestion;
     $this->authPlugins = $authentication_plugins;
     $this->fetcherPlugins = $fetcher_plugins;
@@ -174,10 +184,6 @@ class MigrationForm extends EntityForm {
 
       case self::STEP_THREE:
         $this->chooseEntityTypeStep($form, $form_state);
-        break;
-
-      case self::STEP_FOUR:
-        $this->mapEntityFieldsStep($form, $form_state);
         break;
 
       default:
@@ -245,6 +251,7 @@ class MigrationForm extends EntityForm {
    */
   protected function inputDataStep(array &$form, FormStateInterface $form_state) {
     $plugin_id = $form_state->getTriggeringElement()['#name'];
+    $plugin_id = 'http';
 
     try {
       /** @var \Drupal\feeds_migrate\DataFetcherFormInterface $fether_plugin */
@@ -277,6 +284,13 @@ class MigrationForm extends EntityForm {
    *   Current form state.
    */
   protected function chooseEntityTypeStep(array &$form, FormStateInterface $form_state) {
+    $parser_plugin_id = $this->entity->source['data_parser_plugin'] ?: NULL;
+    if ($parser_plugin_id) {
+      /** @var \Drupal\feeds_migrate\DataParserFormBase $parser_plugin */
+      $parser_plugin = $this->parserManager->createInstance($parser_plugin_id);
+      $form['parser'][$parser_plugin_id] = $parser_plugin->buildConfigurationForm($form, $form_state);
+    }
+
     $entity_types = [];
     /** @var \Drupal\Core\Entity\EntityTypeInterface $definition */
     foreach ($this->entityTypeManager->getDefinitions() as $entity_id => $definition) {
@@ -350,7 +364,6 @@ class MigrationForm extends EntityForm {
     $entity_type = $entity_storage->getEntityType();
 
     $bundle_fields = $this->fieldManager->getFieldDefinitions($entity_type->id(), $this->getEntityBunddleFromMigration());
-
     $good_keys = ['published', 'label', 'uid'];
     foreach ($entity_type->get('entity_keys') as $key => $field_name) {
       if (in_array($key, $good_keys)) {
@@ -404,7 +417,7 @@ class MigrationForm extends EntityForm {
       ],
     ];
 
-    /** @var \Drupal\feeds_migrate_ui\FeedsMigrateUiFieldProcessorInterface $plugin */
+    /** @var \Drupal\feeds_migrate_ui\FeedsMigrateUiFieldInterface $plugin */
     $plugin = $this->fieldProcessorManager->getFieldPlugin($field, $this->entity);
     $field_row['selectors']['data'] = $plugin->buildConfigurationForm($form, $form_state);
 
@@ -495,8 +508,8 @@ class MigrationForm extends EntityForm {
       return;
     }
 
-    $form_state->cleanValues();
     $this->currentStep++;
+    $form_state->cleanValues();
     $form_state->setRebuild();
   }
 
@@ -506,70 +519,174 @@ class MigrationForm extends EntityForm {
   protected function copyFormValuesToEntity(EntityInterface $entity, array $form, FormStateInterface $form_state) {
     switch ($this->currentStep) {
       case self::STEP_ONE:
-        parent::copyFormValuesToEntity($entity, $form, $form_state);
+        $this->copyFormValuesToEntityStepOne($entity, $form, $form_state);
         break;
 
       case self::STEP_TWO:
-        // TODO call plugin submit.
-        //        $source = $entity->get('source') ?: [];
-        //        $source['data_fetcher_plugin'] = $step_data['fetcher_plugin'];
-        //        $source['urls'] = $step_data[$source['data_fetcher_plugin']]['url'];
-        //        $entity->set('source', $source);
+        $this->copyFormValuesToEntityStepTwo($entity, $form, $form_state);
         break;
 
       case self::STEP_THREE:
-        if ($entity_type = $form_state->getValue('entity_type')) {
-          $entity->set('destination', ['plugin' => 'entity:' . $entity_type]);
-        }
-
-        if ($entity_bundle = $form_state->getValue('entity_bundle')) {
-          $source = $entity->get('source') ?: [];
-          $source['constants']['bundle'] = $entity_bundle;
-          $entity->set('source', $source);
-
-          $process = $entity->get('process') ?: [];
-          $process['bundle'] = 'constants/bundle';
-          $entity->set('process', $process);
-        }
-
+        $this->copyFormValuesToEntityStepThree($entity, $form, $form_state);
         break;
 
       default:
-        $values = $form_state->getValues();
-        $this->cleanEmptyFieldValues($values);
-
-        $process = [];
-        $source = $entity->get('source') ?: [];
-        $source['fields'] = [];
-
-        foreach ($values['mapping'] as $field => $field_data) {
-          $selectors = $field_data['selectors']['data'];
-
-          if (is_string($selectors)) {
-            $source['fields'][] = [
-              'name' => $field,
-              'label' => $field,
-              'selector' => $selectors,
-            ];
-            $process[$field] = $field;
-          }
-          else {
-            foreach ($selectors as $column => $selector) {
-              $source['fields'][] = [
-                'name' => "{$field}__$column",
-                'label' => "{$field}__$column",
-                'selector' => $selector,
-              ];
-
-              $process["$field/$column"] = "{$field}__$column";
-            }
-          }
-        }
-
-        $entity->set('process', $process);
-        $entity->set('source', $source);
+        $this->copyFormValuesToEntityStepFour($entity, $form, $form_state);
         break;
     }
+  }
+
+  /**
+   * Copies top-level form values to entity properties.
+   *
+   * This should not change existing entity properties that are not being edited
+   * by this form.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity the current form should operate upon.
+   * @param array $form
+   *   A nested array of form elements comprising the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   */
+  protected function copyFormValuesToEntityStepOne(EntityInterface $entity, array $form, FormStateInterface $form_state) {
+    parent::copyFormValuesToEntity($entity, $form, $form_state);
+    $source = $entity->get('source') ?: [];
+    $source['plugin'] = 'url';
+    $source['data_fetcher_plugin'] = $form_state->getTriggeringElement()['#name'];
+    $entity->set('source', $source);
+    /** @var \Drupal\feeds_migrate\DataFetcherFormInterface $fetcher_plugin */
+    $fetcher_plugin = $this->fetcherPlugins->createInstance($source['data_fetcher_plugin']);
+    $fetcher_plugin->submitConfigurationForm($form, $form_state);
+  }
+
+  /**
+   * Copies top-level form values to entity properties.
+   *
+   * This should not change existing entity properties that are not being edited
+   * by this form.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity the current form should operate upon.
+   * @param array $form
+   *   A nested array of form elements comprising the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   */
+  protected function copyFormValuesToEntityStepTwo(EntityInterface $entity, array $form, FormStateInterface $form_state) {
+    // Todo dynamically get this.
+    $parser_data = 'http://events.stanford.edu/xml/drupal/v2.php?organization=19';
+    /** @var \Drupal\feeds_migrate\DataParserFormBase $parser_plugin */
+    if ($parser_plugin = $this->parserSuggestion->getSuggestedParser($parser_data)) {
+      $source = $entity->get('source');
+      $source['data_parser_plugin'] = $parser_plugin->getPluginId();
+      $source['urls'] = $parser_data;
+      $entity->set('source', $source);
+    }
+  }
+
+  /**
+   * Copies top-level form values to entity properties.
+   *
+   * This should not change existing entity properties that are not being edited
+   * by this form.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity the current form should operate upon.
+   * @param array $form
+   *   A nested array of form elements comprising the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   */
+  protected function copyFormValuesToEntityStepThree(EntityInterface $entity, array $form, FormStateInterface $form_state) {
+    $source = $entity->get('source');
+    if (!empty($source['data_parser_plugin'])) {
+      /** @var DataParserFormInterface $parser_plugin */
+      $parser_plugin = $this->parserManager->createInstance($source['data_parser_plugin']);
+      $parser_plugin->copyFormValuesToEntity($entity, $form, $form_state);
+    }
+
+    if ($entity_type = $form_state->getValue('entity_type')) {
+      $entity->set('destination', ['plugin' => 'entity:' . $entity_type]);
+    }
+
+    if ($entity_bundle = $form_state->getValue('entity_bundle')) {
+      $source = $entity->get('source') ?: [];
+      $source['constants']['bundle'] = $entity_bundle;
+      $entity->set('source', $source);
+
+      $process = $entity->get('process') ?: [];
+      $bundle_key = $this->getBundleKeyFromEntityType($entity_type);
+      $process[$bundle_key] = 'constants/bundle';
+      $entity->set('process', $process);
+    }
+
+  }
+
+  protected function getBundleKeyFromEntityType($entity_type) {
+    /** @var \Drupal\Core\Entity\Sql\SqlContentEntityStorage $entity_storage */
+    $entity_storage = $this->entityTypeManager->getStorage($this->getEntityTypeFromMigration());
+    /** @var \Drupal\Core\Entity\ContentEntityType $entity_type */
+    $entity_type = $entity_storage->getEntityType();
+    return $entity_type->get('entity_keys')['bundle'] ?: NULL;
+  }
+
+  /**
+   * Copies top-level form values to entity properties.
+   *
+   * This should not change existing entity properties that are not being edited
+   * by this form.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity the current form should operate upon.
+   * @param array $form
+   *   A nested array of form elements comprising the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   */
+  protected function copyFormValuesToEntityStepFour(EntityInterface $entity, array $form, FormStateInterface $form_state) {
+    $values = $form_state->getValues();
+    $this->cleanEmptyFieldValues($values);
+    $bundle_key = $this->getBundleKeyFromEntityType($this->getEntityTypeFromMigration());
+
+    $process = $entity->get('process') ?: [];
+    $process = [
+      $bundle_key => $process[$bundle_key],
+    ];
+
+    $source = $entity->get('source') ?: [];
+    $source['fields'] = [];
+
+    foreach ($values['mapping'] as $field => $field_data) {
+      $selectors = $field_data['selectors']['data'];
+
+      if (is_string($selectors)) {
+        $source['fields'][] = [
+          'name' => $field,
+          'label' => $field,
+          'selector' => $selectors,
+        ];
+        $process[$field] = $field;
+      }
+      else {
+        foreach ($selectors as $column => $selector) {
+          $source['fields'][] = [
+            'name' => "{$field}__$column",
+            'label' => "{$field}__$column",
+            'selector' => $selector,
+          ];
+
+          $process["$field/$column"] = "{$field}__$column";
+        }
+      }
+    }
+
+    $entity->set('process', $process);
+    $entity->set('source', $source);
   }
 
   /**

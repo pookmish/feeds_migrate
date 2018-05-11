@@ -13,6 +13,7 @@ use GuzzleHttp\Psr7\Stream;
 class FeedsMigrateUiParserSuggestion {
 
   const PARSER_SIMPLE_XML = 'simple_xml';
+
   const PARSER_JSON = 'json';
 
   /**
@@ -35,6 +36,8 @@ class FeedsMigrateUiParserSuggestion {
 
   public function getSuggestedParser($data) {
     $headers = get_headers($data);
+    dpm($data);
+    dpm($headers);
     foreach ($headers as $header) {
       if (strpos($header, 'Content-Type') !== FALSE) {
         if (strpos($header, 'xml')) {

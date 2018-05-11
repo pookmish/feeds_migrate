@@ -1,25 +1,25 @@
 <?php
 
-namespace Drupal\feeds_migrate_ui\Plugin\feeds_migrate\field_processor;
+namespace Drupal\feeds_migrate_ui\Plugin\feeds_migrate\field;
 
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\Entity\BaseFieldOverride;
 use Drupal\Core\Field\FieldConfigInterface;
 use Drupal\Core\Field\FieldTypePluginManager;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\feeds_migrate_ui\FeedsMigrateUiFieldProcessorBase;
+use Drupal\feeds_migrate_ui\FeedsMigrateUiFieldBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Class DateRange.
  *
- * @FeedsMigrateUiFieldProcessor(
- *   id = "default_processor",
+ * @FeedsMigrateUiField(
+ *   id = "default",
  *   title = @Translation("Default Processor"),
  *   fields = {}
  * )
  */
-class DefaultProcessor extends FeedsMigrateUiFieldProcessorBase {
+class DefaultProcessor extends FeedsMigrateUiFieldBase {
 
   /**
    * Field Type Manager Service.
@@ -111,11 +111,16 @@ class DefaultProcessor extends FeedsMigrateUiFieldProcessorBase {
     foreach ($field_properties as $column_name => $property) {
       $element[$column_name] = [
         '#type' => 'textfield',
-        '#title' => $column_name,
+        '#title' => $this->getColumnName($column_name),
         '#default_value' => $this->getFieldSelector($field->getName() . '/' . $column_name),
       ];
     }
     return $element;
+  }
+
+  protected function getColumnName($column_name) {
+    $column_name = str_replace('_', ' ', $column_name);
+    return $this->t(ucwords($column_name));
   }
 
 }

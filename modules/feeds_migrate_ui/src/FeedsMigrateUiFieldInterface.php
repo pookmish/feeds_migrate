@@ -10,6 +10,6 @@ use Drupal\Core\Plugin\PluginFormInterface;
  *
  * @package Drupal\feeds_migrate_ui
  */
-interface FeedsMigrateUiFieldProcessorInterface extends PluginFormInterface, ContainerFactoryPluginInterface {
+interface FeedsMigrateUiFieldInterface extends PluginFormInterface, ContainerFactoryPluginInterface {
 
 }

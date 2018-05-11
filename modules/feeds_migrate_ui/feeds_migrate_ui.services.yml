@@ -2,6 +2,6 @@ services:
   feeds_migrate_ui.parser_suggestion:
     class: Drupal\feeds_migrate_ui\FeedsMigrateUiParserSuggestion
     arguments: ["@plugin.manager.migrate_plus.data_parser"]
-  plugin.manager.feeds_migrate_ui.field_processor:
-    class: Drupal\feeds_migrate_ui\FeedsMigrateUiFieldProcessorManager
+  plugin.manager.feeds_migrate_ui.field:
+    class: Drupal\feeds_migrate_ui\FeedsMigrateUiFieldManager
     parent: default_plugin_manager

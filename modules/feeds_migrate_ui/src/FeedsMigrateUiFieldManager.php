@@ -9,11 +9,11 @@ use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\migrate_plus\Entity\MigrationInterface;
 
 /**
- * Class FeedsMigrateUiFieldProcessorManager.
+ * Class FeedsMigrateUiFieldFormManager.
  *
  * @package Drupal\feeds_migrate_ui
  */
-class FeedsMigrateUiFieldProcessorManager extends DefaultPluginManager {
+class FeedsMigrateUiFieldManager extends DefaultPluginManager {
 
   /**
    * Constructs a new data_fetcherPluginManager.
@@ -27,14 +27,14 @@ class FeedsMigrateUiFieldProcessorManager extends DefaultPluginManager {
    *   The module handler to invoke the alter hook with.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/feeds_migrate/field_processor',
+    parent::__construct('Plugin/feeds_migrate/field',
       $namespaces,
       $module_handler,
-      'Drupal\feeds_migrate_ui\FeedsMigrateUiFieldProcessorInterface',
-      'Drupal\feeds_migrate_ui\Annotation\FeedsMigrateUiFieldProcessor');
+      'Drupal\feeds_migrate_ui\FeedsMigrateUiFieldInterface',
+      'Drupal\feeds_migrate_ui\Annotation\FeedsMigrateUiField');
 
-    $this->alterInfo('field_processor_form_info');
-    $this->setCacheBackend($cache_backend, 'migrate_plus_plugins_field_processor_form');
+    $this->alterInfo('feeds_migrate_ui_field_info');
+    $this->setCacheBackend($cache_backend, 'feeds_migrate_ui_field');
   }
 
   /**
@@ -44,7 +44,7 @@ class FeedsMigrateUiFieldProcessorManager extends DefaultPluginManager {
    *   The field definition.
    *
    * @return bool|object
-   *   The plugin if a processor plugin is defined, false if none.
+   *   The plugin if a form plugin is defined, false if none.
    *
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
@@ -60,7 +60,7 @@ class FeedsMigrateUiFieldProcessorManager extends DefaultPluginManager {
       }
     }
 
-    return $this->createInstance('default_processor', $config);
+    return $this->createInstance('default', $config);
   }
 
 }

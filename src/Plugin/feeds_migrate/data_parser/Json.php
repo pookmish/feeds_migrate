@@ -20,7 +20,7 @@ class Json extends DataParserFormBase {
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $element['item_selector'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Item Selector'),
+      '#title' => $this->t('JSON Item Selector'),
     ];
     return $element;
   }
