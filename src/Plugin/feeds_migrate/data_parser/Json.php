@@ -32,6 +32,7 @@ class Json extends DataParserFormBase {
       '#type' => 'textfield',
       '#title' => $this->t('Unique Selector Path'),
       '#default_value' => $this->getUniqueSelector($entity),
+      '#required' => TRUE,
     ];
     return $element;
   }
