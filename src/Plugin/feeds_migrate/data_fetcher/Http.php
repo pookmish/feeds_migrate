@@ -2,6 +2,7 @@
 
 namespace Drupal\feeds_migrate\Plugin\feeds_migrate\data_fetcher;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\feeds_migrate\DataFetcherFormPluginBase;
 use Drupal\feeds_migrate\FeedsMigrateImporterInterface;
@@ -37,6 +38,18 @@ class Http extends DataFetcherFormPluginBase {
         '#default_value' => $default_value,
       ],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getParserData(array $form, FormStateInterface $form_state) {
+    return $form_state->getValue([$this->getPluginId(), 'url']);
+  }
+
+  public function copyFormValuesToEntity(EntityInterface $entity, array $form, FormStateInterface $form_state) {
+    $source = $entity->get('source')?:[];
+    $source[''] = '';
   }
 
   /**

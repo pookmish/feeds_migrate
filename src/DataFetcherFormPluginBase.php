@@ -2,6 +2,7 @@
 
 namespace Drupal\feeds_migrate;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginBase;
 

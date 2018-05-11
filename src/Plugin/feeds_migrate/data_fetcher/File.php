@@ -89,4 +89,11 @@ class File extends DataFetcherFormPluginBase {
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getParserData(array $form, FormStateInterface $form_state) {
+    return $form_state->getValue([$this->getPluginId(), 'url']);
+  }
+
 }

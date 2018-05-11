@@ -41,7 +41,7 @@ class MigrationForm extends EntityForm {
    *
    * @var int
    */
-  protected $currentStep = self::STEP_ONE;
+  protected $currentStep = 1;
 
   /**
    * Fill This.
@@ -557,9 +557,6 @@ class MigrationForm extends EntityForm {
     $source['plugin'] = 'url';
     $source['data_fetcher_plugin'] = $form_state->getTriggeringElement()['#name'];
     $entity->set('source', $source);
-    /** @var \Drupal\feeds_migrate\DataFetcherFormInterface $fetcher_plugin */
-    $fetcher_plugin = $this->fetcherPlugins->createInstance($source['data_fetcher_plugin']);
-    $fetcher_plugin->submitConfigurationForm($form, $form_state);
   }
 
   /**
@@ -576,9 +573,12 @@ class MigrationForm extends EntityForm {
    *   The current state of the form.
    */
   protected function copyFormValuesToEntityStepTwo(EntityInterface $entity, array $form, FormStateInterface $form_state) {
-    // Todo dynamically get this.
-    $parser_data = 'http://events.stanford.edu/xml/drupal/v2.php?organization=19';
-    /** @var \Drupal\feeds_migrate\DataParserFormBase $parser_plugin */
+    $source = $entity->get('source') ?: [];
+    $fetcher_plugin_id = $source['data_fetcher_plugin'];
+    /** @var \Drupal\feeds_migrate\DataFetcherFormInterface $fetcher_plugin */
+    $fetcher_plugin = $this->fetcherPlugins->createInstance($fetcher_plugin_id);
+    $parser_data = $fetcher_plugin->getParserData($form, $form_state);
+
     if ($parser_plugin = $this->parserSuggestion->getSuggestedParser($parser_data)) {
       $source = $entity->get('source');
       $source['data_parser_plugin'] = $parser_plugin->getPluginId();
@@ -605,7 +605,7 @@ class MigrationForm extends EntityForm {
   protected function copyFormValuesToEntityStepThree(EntityInterface $entity, array $form, FormStateInterface $form_state) {
     $source = $entity->get('source');
     if (!empty($source['data_parser_plugin'])) {
-      /** @var DataParserFormInterface $parser_plugin */
+      /** @var \Drupal\feeds_migrate\DataParserFormInterface $parser_plugin */
       $parser_plugin = $this->parserManager->createInstance($source['data_parser_plugin']);
       $parser_plugin->copyFormValuesToEntity($entity, $form, $form_state);
     }

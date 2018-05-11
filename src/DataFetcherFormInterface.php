@@ -74,4 +74,6 @@ interface DataFetcherFormInterface extends PluginFormInterface {
    */
   public function alterMigration(FeedsMigrateImporterInterface $importer, Migration $migration);
 
+  public function getParserData(array $form, FormStateInterface $form_state);
+
 }
