@@ -14,6 +14,7 @@ use Drupal\feeds_migrate\DataFetcherFormPluginManager;
 use Drupal\feeds_migrate\DataParserPluginManager;
 use Drupal\feeds_migrate_ui\FeedsMigrateUiFieldManager;
 use Drupal\feeds_migrate_ui\FeedsMigrateUiParserSuggestion;
+use Drupal\node\Entity\Node;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -281,6 +282,8 @@ class MigrationForm extends EntityForm {
    *   Complete form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Current form state.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   protected function chooseEntityTypeStep(array &$form, FormStateInterface $form_state) {
     $parser_plugin_id = $this->entity->source['data_parser_plugin'] ?: NULL;
@@ -289,6 +292,13 @@ class MigrationForm extends EntityForm {
       $parser_plugin = $this->parserManager->createInstance($parser_plugin_id);
       $form['parser'][$parser_plugin_id] = $parser_plugin->buildConfigurationForm($form, $form_state);
     }
+
+    $form['ids'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Unique Selector Path'),
+      '#default_value' => $this->getUniqueSelector($this->entity),
+      '#required' => TRUE,
+    ];
 
     $entity_types = [];
     /** @var \Drupal\Core\Entity\EntityTypeInterface $definition */
@@ -326,6 +336,28 @@ class MigrationForm extends EntityForm {
       $form['entity_bundle']['#default_value'] = $bundle;
       foreach ($this->bundleManager->getBundleInfo($chosen_type) as $id => $bundle) {
         $form['entity_bundle']['#options'][$id] = $bundle['label'];
+      }
+    }
+  }
+
+  /**
+   * Get the unique value selector path.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Migration entity.
+   *
+   * @return string
+   *   The selector path.
+   */
+  protected function getUniqueSelector(EntityInterface $entity) {
+    $source = $entity->get('source');
+    if (empty($source['ids'])) {
+      return NULL;
+    }
+    $field_name = key($source['ids']);
+    foreach ($source['fields'] as $field_selector) {
+      if ($field_selector['name'] == $field_name) {
+        return $field_selector['selector'];
       }
     }
   }
@@ -613,22 +645,44 @@ class MigrationForm extends EntityForm {
       $entity->set('destination', ['plugin' => 'entity:' . $entity_type]);
     }
 
+
     if ($entity_bundle = $form_state->getValue('entity_bundle')) {
       $source = $entity->get('source') ?: [];
+
+      $id_selector = $form_state->getValue('ids');
+      $source['ids'] = ['guid' => ['type' => 'string']];
+
+      $source['fields'][] = [
+        'name' => 'guid',
+        'label' => 'guid',
+        'selector' => $id_selector,
+      ];
+
       $source['constants']['bundle'] = $entity_bundle;
       $entity->set('source', $source);
 
       $process = $entity->get('process') ?: [];
-      $bundle_key = $this->getBundleKeyFromEntityType($entity_type);
+      $bundle_key = $this->getBundleKey();
       $process[$bundle_key] = 'constants/bundle';
       $entity->set('process', $process);
     }
 
   }
 
-  protected function getBundleKeyFromEntityType($entity_type) {
-    /** @var \Drupal\Core\Entity\Sql\SqlContentEntityStorage $entity_storage */
-    $entity_storage = $this->entityTypeManager->getStorage($this->getEntityTypeFromMigration());
+  /**
+   * Get the bundle key for the configured entity type on the migration.
+   *
+   * @return string|null
+   *   Bundle Key.
+   */
+  protected function getBundleKey() {
+    try {
+      /** @var \Drupal\Core\Entity\Sql\SqlContentEntityStorage $entity_storage */
+      $entity_storage = $this->entityTypeManager->getStorage($this->getEntityTypeFromMigration());
+    }
+    catch (\Exception $e) {
+      return NULL;
+    }
     /** @var \Drupal\Core\Entity\ContentEntityType $entity_type */
     $entity_type = $entity_storage->getEntityType();
     return $entity_type->get('entity_keys')['bundle'] ?: NULL;
@@ -650,7 +704,7 @@ class MigrationForm extends EntityForm {
   protected function copyFormValuesToEntityStepFour(EntityInterface $entity, array $form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
     $this->cleanEmptyFieldValues($values);
-    $bundle_key = $this->getBundleKeyFromEntityType($this->getEntityTypeFromMigration());
+    $bundle_key = $this->getBundleKey();
 
     $process = $entity->get('process') ?: [];
     $process = [

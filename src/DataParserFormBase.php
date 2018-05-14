@@ -25,15 +25,7 @@ abstract class DataParserFormBase extends PluginBase implements DataParserFormIn
    */
   public function copyFormValuesToEntity(EntityInterface $entity, array $form, FormStateInterface $form_state) {
     $values = $form_state->getValue(['parser', $this->getPluginId()]);
-    $id_selector = $values['ids'];
-    $values['ids'] = ['guid' => ['type' => 'string']];
     $source = $entity->get('source') ?: [];
-
-    $source['fields'][] = [
-      'name' => 'guid',
-      'label' => 'guid',
-      'selector' => $id_selector,
-    ];
     $entity->set('source', array_merge($source, $values));
   }
 
