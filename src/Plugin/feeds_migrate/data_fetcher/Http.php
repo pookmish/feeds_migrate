@@ -47,11 +47,6 @@ class Http extends DataFetcherFormPluginBase {
     return $form_state->getValue([$this->getPluginId(), 'url']);
   }
 
-  public function copyFormValuesToEntity(EntityInterface $entity, array $form, FormStateInterface $form_state) {
-    $source = $entity->get('source')?:[];
-    $source[''] = '';
-  }
-
   /**
    * {@inheritdoc}
    */

@@ -5,3 +5,6 @@ services:
   plugin.manager.feeds_migrate_ui.field:
     class: Drupal\feeds_migrate_ui\FeedsMigrateUiFieldManager
     parent: default_plugin_manager
+  plugin.manager.feeds_migrate_ui.process:
+    class: Drupal\feeds_migrate_ui\FeedsMigrateUiProcessManager
+    parent: default_plugin_manager

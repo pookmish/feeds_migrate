@@ -3,7 +3,6 @@
 namespace Drupal\feeds_migrate_ui\Form;
 
 use Drupal\Core\Entity\EntityFieldManager;
-use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -14,7 +13,6 @@ use Drupal\feeds_migrate\DataFetcherFormPluginManager;
 use Drupal\feeds_migrate\DataParserPluginManager;
 use Drupal\feeds_migrate_ui\FeedsMigrateUiFieldManager;
 use Drupal\feeds_migrate_ui\FeedsMigrateUiParserSuggestion;
-use Drupal\node\Entity\Node;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -22,7 +20,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @package Drupal\feeds_migrate_ui\Form
  */
-class MigrationForm extends EntityForm {
+class MigrationForm extends MigrationFormBase {
 
   /**
    * Form steps.
@@ -42,7 +40,7 @@ class MigrationForm extends EntityForm {
    *
    * @var int
    */
-  protected $currentStep = 1;
+  protected $currentStep = 4;
 
   /**
    * Fill This.
@@ -68,7 +66,7 @@ class MigrationForm extends EntityForm {
   /**
    * Fill This.
    *
-   * @var \Drupal\feeds_migrate_ui\FeedsMigrateUiFieldProcessorManager
+   * @var \Drupal\feeds_migrate_ui\FeedsMigrateUiFieldManager
    */
   protected $fieldProcessorManager;
 
@@ -79,12 +77,6 @@ class MigrationForm extends EntityForm {
    */
   protected $entityTypeManager;
 
-  /**
-   * Fill This.
-   *
-   * @var \Drupal\Core\Entity\EntityFieldManager
-   */
-  protected $fieldManager;
 
   /**
    * Fill This.
@@ -417,8 +409,9 @@ class MigrationForm extends EntityForm {
     foreach ($bundle_fields as $field_name => $field) {
       $table[$field_name] = $this->buildFieldRow($field, $form, $form_state);
     }
-
     $form['mapping'] = $table;
+    $form['mapping']['#prefix'] = '<div id="field-overview-wrapper">';
+    $form['mapping']['#suffix'] = '</div>';
   }
 
   /**
@@ -457,7 +450,7 @@ class MigrationForm extends EntityForm {
       '#submit' => ['::multistepSubmit'],
       '#ajax' => [
         'callback' => '::multistepAjax',
-        'wrapper' => 'field-display-overview-wrapper',
+        'wrapper' => 'field-overview-wrapper',
         'effect' => 'fade',
       ],
       '#field_name' => $field_name,
@@ -480,32 +473,105 @@ class MigrationForm extends EntityForm {
       '#suffix' => '</div>',
     ];
 
+    if ($form_state->get('plugin_settings_edit') == $field_name) {
+
+      // We are currently editing this field's plugin settings. Display the
+      // settings form and submit buttons.
+      $field_row['settings_edit']['data'] = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['field-plugin-settings-edit-form']],
+        '#parents' => ['fields', $field_name, 'settings_edit_form'],
+        'label' => [
+          '#markup' => $this->t('Plugin settings'),
+        ],
+        'settings' => [],
+        'actions' => [
+          '#type' => 'actions',
+          'go_to_processors' => [
+            '#type' => 'submit',
+            '#button_type' => 'primary',
+            '#name' => $field_name . '_plugin_settings_update',
+            '#field_name' => $field_name,
+            '#value' => $this->t('Edit Processors'),
+            '#op' => 'go_to_processors',
+            '#submit' => ['::multistepSubmit'],
+          ],
+          'cancel_settings' => $base_button + [
+              '#type' => 'submit',
+              '#name' => $field_name . '_plugin_settings_cancel',
+              '#value' => $this->t('Cancel'),
+              '#op' => 'cancel',
+              // Do not check errors for the 'Cancel' button, but make sure we
+              // get the value of the 'plugin type' select.
+              '#limit_validation_errors' => [['fields', $field_name, 'type']],
+            ],
+        ],
+      ];
+      $field_row['#attributes']['class'][] = 'field-plugin-settings-editing';
+    }
+
     return $field_row;
   }
 
   /**
-   * Find the entity type the migration is importing into.
-   *
-   * @return string
-   *   Machine name of the entity type eg 'node'.
+   * Ajax handler for multistep buttons.
    */
-  protected function getEntityTypeFromMigration() {
-    $destination = $this->entity->destination['plugin'];
-    if (strpos($destination, ':') !== FALSE) {
-      list(, $entity_type) = explode(':', $destination);
-      return $entity_type;
-    }
+  public static function multistepAjax(array $form, FormStateInterface $form_state) {
+    //    $trigger = $form_state->getTriggeringElement();
+    //    $op = $trigger['#op'];
+    //
+    //    // Pick the elements that need to receive the ajax-new-content effect.
+    //    switch ($op) {
+    //      case 'edit':
+    //        $updated_rows = [$trigger['#field_name']];
+    //        $updated_columns = ['settings_edit'];
+    //        break;
+    //
+    //      case 'update':
+    //      case 'cancel':
+    //        $updated_rows = [$trigger['#field_name']];
+    //        $updated_columns = ['plugin', 'settings_summary', 'settings_edit'];
+    //        break;
+    //    }
+    //
+    //    foreach ($updated_rows as $name) {
+    //      foreach ($updated_columns as $key) {
+    //        $element = &$form['mapping'][$name][$key];
+    ////        $element['#prefix'] = '<div class="ajax-new-content">' . (isset($element['#prefix']) ? $element['#prefix'] : '');
+    ////        $element['#suffix'] = (isset($element['#suffix']) ? $element['#suffix'] : '') . '</div>';
+    //      }
+    //    }
+    return $form['mapping'];
   }
 
   /**
-   * The bundle the migration is importing into.
-   *
-   * @return string
-   *   Entity type bundle eg 'article'.
+   * Form submission handler for multistep buttons.
    */
-  protected function getEntityBunddleFromMigration() {
-    if (!empty($this->entity->source['constants']['bundle'])) {
-      return $this->entity->source['constants']['bundle'];
+  public function multistepSubmit($form, FormStateInterface $form_state) {
+    $trigger = $form_state->getTriggeringElement();
+    $op = $trigger['#op'];
+    $form_state->setRebuild();
+    switch ($op) {
+      case 'edit':
+        // Store the field whose settings are currently being edited.
+        $field_name = $trigger['#field_name'];
+        $form_state->set('plugin_settings_edit', $field_name);
+        break;
+
+      case 'go_to_processors':
+        $this->submitForm($form, $form_state);
+        $form_state->setRedirect('entity.migration.process_plugins', [
+          'migration' => $this->entity->id(),
+          'field' => $trigger['#field_name'],
+        ]);
+
+        $form_state->setRebuild(FALSE);
+        break;
+
+      case 'cancel':
+        // Set the field back to 'non edit' mode.
+        $form_state->set('plugin_settings_edit', NULL);
+        break;
     }
   }
 

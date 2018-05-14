@@ -15,6 +15,7 @@ function feeds_migrate_ui_entity_type_alter(array &$entity_types) {
   $migration->setFormClass('add', 'Drupal\feeds_migrate_ui\Form\MigrationForm');
   $migration->setFormClass('edit', 'Drupal\feeds_migrate_ui\Form\MigrationForm');
   $migration->setFormClass('delete', 'Drupal\feeds_migrate_ui\Form\MigrationDeleteForm');
+  $migration->setFormClass('process_plugins', 'Drupal\feeds_migrate_ui\Form\MigrationProcess');
 
   $migration->setHandlerClass('list_builder', 'Drupal\feeds_migrate_ui\MigrationListBuilder');
 

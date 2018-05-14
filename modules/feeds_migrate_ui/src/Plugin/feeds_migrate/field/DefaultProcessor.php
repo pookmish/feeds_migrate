@@ -5,6 +5,7 @@ namespace Drupal\feeds_migrate_ui\Plugin\feeds_migrate\field;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\Entity\BaseFieldOverride;
 use Drupal\Core\Field\FieldConfigInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldTypePluginManager;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\feeds_migrate_ui\FeedsMigrateUiFieldBase;
@@ -63,13 +64,13 @@ class DefaultProcessor extends FeedsMigrateUiFieldBase {
   /**
    * Build the configuration form for a base field component.
    *
-   * @param \Drupal\Core\Field\BaseFieldDefinition|\Drupal\Core\Field\Entity\BaseFieldOverride $field
+   * @param FieldDefinitionInterface $field
    *   The base field definition.
    *
    * @return array
    *   Form entry.
    */
-  protected function buildBaseFieldForm($field) {
+  protected function buildBaseFieldForm(FieldDefinitionInterface $field) {
     $element = [
       '#type' => 'textfield',
       '#title' => $field->getLabel(),
@@ -89,12 +90,17 @@ class DefaultProcessor extends FeedsMigrateUiFieldBase {
    *   Form element for the field.
    */
   protected function buildContentFieldForm(FieldConfigInterface $field) {
+    $config = [
+      'field_definition' => $field,
+      'name' => $field->label(),
+      'parent' => NULL,
+    ];
     try {
-      $item_instance = $this->fieldTypeManager->createInstance($field->getType(), ['field_definition' => $field]);
+      $item_instance = $this->fieldTypeManager->createInstance($field->getType(), $config);
       $field_properties = $item_instance->getProperties();
     }
     catch (\Exception $e) {
-      return [];
+      return $this->buildBaseFieldForm($field);
     }
 
     if (count($field_properties) == 1) {

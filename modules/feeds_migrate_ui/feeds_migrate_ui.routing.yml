@@ -23,11 +23,11 @@ entity.migration.edit_form:
   requirements:
     _permission: 'administer feeds migrate importers'
 
-entity.migration.mapping_form:
-  path: '/admin/structure/feeds-migrate/sources/{migration}/mapping'
+entity.migration.process_plugins:
+  path: '/admin/structure/feeds-migrate/sources/{migration}/{field}'
   defaults:
-    _entity_form: 'migration.mapping'
-    _title: 'Mapping Configuration'
+    _entity_form: 'migration.process_plugins'
+    _title_callback: 'Drupal\feeds_migrate_ui\Form\MigrationProcess::getTitle'
   requirements:
     _permission: 'administer feeds migrate importers'
 
