@@ -16,7 +16,11 @@ abstract class FeedsMigrateUiProcessBase extends PluginBase implements FeedsMigr
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    // TODO: Implement buildConfigurationForm() method.
+    $element['stuff'] = [
+      '#type' => 'textfield',
+      '#title' => 'works',
+    ];
+    return $element;
   }
 
   /**
@@ -38,6 +42,14 @@ abstract class FeedsMigrateUiProcessBase extends PluginBase implements FeedsMigr
    */
   public function getSummary() {
     // TODO: Implement getSummary() method.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function label() {
+    $definition = $this->getPluginDefinition();
+    return $definition['title'];
   }
 
 }

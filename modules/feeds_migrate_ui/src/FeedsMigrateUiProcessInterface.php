@@ -19,4 +19,9 @@ interface FeedsMigrateUiProcessInterface extends PluginFormInterface {
    */
   public function getSummary();
 
+  /**
+   * @return string
+   */
+  public function label();
+
 }

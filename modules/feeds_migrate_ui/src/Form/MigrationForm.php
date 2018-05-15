@@ -397,6 +397,8 @@ class MigrationForm extends MigrationFormBase {
 
 
     $table = [
+      '#prefix' => '<div id="field-overview-wrapper">',
+      '#suffix' => '</div>',
       '#type' => 'table',
       '#header' => [
         $this->t('Field'),
@@ -410,8 +412,6 @@ class MigrationForm extends MigrationFormBase {
       $table[$field_name] = $this->buildFieldRow($field, $form, $form_state);
     }
     $form['mapping'] = $table;
-    $form['mapping']['#prefix'] = '<div id="field-overview-wrapper">';
-    $form['mapping']['#suffix'] = '</div>';
   }
 
   /**
@@ -497,14 +497,14 @@ class MigrationForm extends MigrationFormBase {
             '#submit' => ['::multistepSubmit'],
           ],
           'cancel_settings' => $base_button + [
-              '#type' => 'submit',
-              '#name' => $field_name . '_plugin_settings_cancel',
-              '#value' => $this->t('Cancel'),
-              '#op' => 'cancel',
-              // Do not check errors for the 'Cancel' button, but make sure we
-              // get the value of the 'plugin type' select.
-              '#limit_validation_errors' => [['fields', $field_name, 'type']],
-            ],
+            '#type' => 'submit',
+            '#name' => $field_name . '_plugin_settings_cancel',
+            '#value' => $this->t('Cancel'),
+            '#op' => 'cancel',
+            // Do not check errors for the 'Cancel' button, but make sure we
+            // get the value of the 'plugin type' select.
+            '#limit_validation_errors' => [['fields', $field_name, 'type']],
+          ],
         ],
       ];
       $field_row['#attributes']['class'][] = 'field-plugin-settings-editing';
@@ -517,30 +517,6 @@ class MigrationForm extends MigrationFormBase {
    * Ajax handler for multistep buttons.
    */
   public static function multistepAjax(array $form, FormStateInterface $form_state) {
-    //    $trigger = $form_state->getTriggeringElement();
-    //    $op = $trigger['#op'];
-    //
-    //    // Pick the elements that need to receive the ajax-new-content effect.
-    //    switch ($op) {
-    //      case 'edit':
-    //        $updated_rows = [$trigger['#field_name']];
-    //        $updated_columns = ['settings_edit'];
-    //        break;
-    //
-    //      case 'update':
-    //      case 'cancel':
-    //        $updated_rows = [$trigger['#field_name']];
-    //        $updated_columns = ['plugin', 'settings_summary', 'settings_edit'];
-    //        break;
-    //    }
-    //
-    //    foreach ($updated_rows as $name) {
-    //      foreach ($updated_columns as $key) {
-    //        $element = &$form['mapping'][$name][$key];
-    ////        $element['#prefix'] = '<div class="ajax-new-content">' . (isset($element['#prefix']) ? $element['#prefix'] : '');
-    ////        $element['#suffix'] = (isset($element['#suffix']) ? $element['#suffix'] : '') . '</div>';
-    //      }
-    //    }
     return $form['mapping'];
   }
 

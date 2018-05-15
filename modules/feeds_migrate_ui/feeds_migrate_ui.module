@@ -24,3 +24,21 @@ function feeds_migrate_ui_entity_type_alter(array &$entity_types) {
   $migration->setLinkTemplate('delete-form', '/admin/structure/feeds-migrate/sources/{migration}/delete');
   $migration->set('admin_permission', 'administer feeds migrate importers');
 }
+
+
+/**
+ * Implements hook_preprocess().
+ */
+function feeds_migrate_ui_preprocess(&$variables, $hook) {
+//  dpm($hook);
+  if($hook == 'dropbutton_wrapper'){
+//    dpm($variables);
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function feeds_migrate_ui_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+//  dpm($form);
+}

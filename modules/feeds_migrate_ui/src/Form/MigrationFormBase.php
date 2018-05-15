@@ -3,7 +3,6 @@
 namespace Drupal\feeds_migrate_ui\Form;
 
 use Drupal\Core\Entity\EntityForm;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Class MigrationFormBase.
