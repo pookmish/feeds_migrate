@@ -22,12 +22,16 @@ entity.migration.edit_form:
     _title_callback: 'Drupal\feeds_migrate_ui\Form\MigrationForm::getTitle'
   requirements:
     _permission: 'administer feeds migrate importers'
+  options:
+    parameters:
+      step:
+        type: 'integer'
 
-entity.migration.process_plugins:
+entity.migration.process_plugins_form:
   path: '/admin/structure/feeds-migrate/sources/{migration}/{field}'
   defaults:
     _entity_form: 'migration.process_plugins'
-    _title_callback: 'Drupal\feeds_migrate_ui\Form\MigrationProcess::getTitle'
+    _title_callback: 'Drupal\feeds_migrate_ui\Form\MigrationProcessForm::getTitle'
   requirements:
     _permission: 'administer feeds migrate importers'
 

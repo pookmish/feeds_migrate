@@ -77,7 +77,6 @@ class MigrationForm extends MigrationFormBase {
    */
   protected $entityTypeManager;
 
-
   /**
    * Fill This.
    *
@@ -395,7 +394,6 @@ class MigrationForm extends MigrationFormBase {
       unset($bundle_fields[$field_name]);
     }
 
-
     $table = [
       '#prefix' => '<div id="field-overview-wrapper">',
       '#suffix' => '</div>',
@@ -497,14 +495,14 @@ class MigrationForm extends MigrationFormBase {
             '#submit' => ['::multistepSubmit'],
           ],
           'cancel_settings' => $base_button + [
-            '#type' => 'submit',
-            '#name' => $field_name . '_plugin_settings_cancel',
-            '#value' => $this->t('Cancel'),
-            '#op' => 'cancel',
-            // Do not check errors for the 'Cancel' button, but make sure we
-            // get the value of the 'plugin type' select.
-            '#limit_validation_errors' => [['fields', $field_name, 'type']],
-          ],
+              '#type' => 'submit',
+              '#name' => $field_name . '_plugin_settings_cancel',
+              '#value' => $this->t('Cancel'),
+              '#op' => 'cancel',
+              // Do not check errors for the 'Cancel' button, but make sure we
+              // get the value of the 'plugin type' select.
+              '#limit_validation_errors' => [['fields', $field_name, 'type']],
+            ],
         ],
       ];
       $field_row['#attributes']['class'][] = 'field-plugin-settings-editing';
@@ -535,12 +533,11 @@ class MigrationForm extends MigrationFormBase {
         break;
 
       case 'go_to_processors':
-        $this->submitForm($form, $form_state);
-        $form_state->setRedirect('entity.migration.process_plugins', [
-          'migration' => $this->entity->id(),
-          'field' => $trigger['#field_name'],
-        ]);
+        parent::submitForm($form, $form_state);
+        $route = $this->entity->toUrl('process-plugins-form');
+        $route->setRouteParameter('field', $trigger['#field_name']);
 
+        $form_state->setRedirect($route->getRouteName(), $route->getRouteParameters(), $route->getOptions());
         $form_state->setRebuild(FALSE);
         break;
 
@@ -621,8 +618,6 @@ class MigrationForm extends MigrationFormBase {
    *   A nested array of form elements comprising the form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   protected function copyFormValuesToEntityStepOne(EntityInterface $entity, array $form, FormStateInterface $form_state) {
     parent::copyFormValuesToEntity($entity, $form, $form_state);
@@ -644,6 +639,8 @@ class MigrationForm extends MigrationFormBase {
    *   A nested array of form elements comprising the form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   protected function copyFormValuesToEntityStepTwo(EntityInterface $entity, array $form, FormStateInterface $form_state) {
     $source = $entity->get('source') ?: [];
@@ -686,7 +683,6 @@ class MigrationForm extends MigrationFormBase {
     if ($entity_type = $form_state->getValue('entity_type')) {
       $entity->set('destination', ['plugin' => 'entity:' . $entity_type]);
     }
-
 
     if ($entity_bundle = $form_state->getValue('entity_bundle')) {
       $source = $entity->get('source') ?: [];

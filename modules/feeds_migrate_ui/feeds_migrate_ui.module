@@ -15,30 +15,13 @@ function feeds_migrate_ui_entity_type_alter(array &$entity_types) {
   $migration->setFormClass('add', 'Drupal\feeds_migrate_ui\Form\MigrationForm');
   $migration->setFormClass('edit', 'Drupal\feeds_migrate_ui\Form\MigrationForm');
   $migration->setFormClass('delete', 'Drupal\feeds_migrate_ui\Form\MigrationDeleteForm');
-  $migration->setFormClass('process_plugins', 'Drupal\feeds_migrate_ui\Form\MigrationProcess');
+  $migration->setFormClass('process_plugins', 'Drupal\feeds_migrate_ui\Form\MigrationProcessForm');
 
   $migration->setHandlerClass('list_builder', 'Drupal\feeds_migrate_ui\MigrationListBuilder');
 
   $migration->setLinkTemplate('canonical', '/admin/structure/feeds-migrate/sources/{migration}');
   $migration->setLinkTemplate('edit-form', '/admin/structure/feeds-migrate/sources/{migration}');
   $migration->setLinkTemplate('delete-form', '/admin/structure/feeds-migrate/sources/{migration}/delete');
+  $migration->setLinkTemplate('process-plugins-form', '/admin/structure/feeds-migrate/sources/{migration}/{field}');
   $migration->set('admin_permission', 'administer feeds migrate importers');
-}
-
-
-/**
- * Implements hook_preprocess().
- */
-function feeds_migrate_ui_preprocess(&$variables, $hook) {
-//  dpm($hook);
-  if($hook == 'dropbutton_wrapper'){
-//    dpm($variables);
-  }
-}
-
-/**
- * Implements hook_form_alter().
- */
-function feeds_migrate_ui_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
-//  dpm($form);
 }

@@ -4,6 +4,7 @@ namespace Drupal\feeds_migrate_ui;
 
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\feeds_migrate_ui\Form\MigrationForm;
 
 /**
  * Class FeedsMigrateImporterListBuilder.
@@ -19,6 +20,17 @@ class MigrationListBuilder extends ConfigEntityListBuilder {
     $header['label'] = $this->t('Importer');
     return $header + parent::buildHeader();
   }
+
+  public function getDefaultOperations(EntityInterface $entity) {
+    $operations = parent::getDefaultOperations($entity);
+    $operations['edit_mapping'] = [
+      'title' => t('Edit Fields'),
+      'weight' => -10,
+      'url' => $this->ensureDestination($entity->toUrl('edit-form', ['step' => MigrationForm::STEP_FINALIZE])),
+    ];
+//    \Drupal\Core\Routing\UrlGeneratorInterface::generateFromRoute()
+  return $operations;
+}
 
   /**
    * {@inheritdoc}
