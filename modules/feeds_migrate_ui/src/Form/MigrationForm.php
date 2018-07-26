@@ -771,6 +771,7 @@ class MigrationForm extends EntityForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     if ($this->currentStep == self::STEP_FINALIZE) {
+      $this->entity->migration_group = 'default';
       return parent::save($form, $form_state);
     }
   }
