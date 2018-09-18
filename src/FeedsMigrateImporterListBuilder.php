@@ -63,9 +63,15 @@ class FeedsMigrateImporterListBuilder extends ConfigEntityListBuilder {
     /** @var \Drupal\migrate_plus\Entity\Migration $migration */
     $migration = Migration::load($entity->source);
 
+    if (!$migration) {
+      $source = t('Source missing');
+    }
+    else {
+      $source = $migration->label();
+    }
     $data = [
       'label' => $entity->label(),
-      'source' => $migration->label(),
+      'source' => $source,
       'last' => $this->t('Never'),
       'count' => 0,
     ];
@@ -76,8 +82,9 @@ class FeedsMigrateImporterListBuilder extends ConfigEntityListBuilder {
 
     /** @var \Drupal\feeds_migrate\FeedsMigrateExecutable $migration */
     $migration = $entity->getExecutable();
-    $data['count'] = $migration->getCreatedCount();
-
+    if ($migration) {
+      $data['count'] = $migration->getCreatedCount();
+    }
     $row = [
       'class' => $entity->status() ? 'enabled' : 'disabled',
       'data' => $data + parent::buildRow($entity),
