@@ -201,7 +201,9 @@ class FeedsMigrateImporterForm extends EntityForm {
 
     /** @var Migration $migration */
     foreach (Migration::loadMultiple() as $migration) {
-      $fetcher_types[$migration->source['data_fetcher_plugin']][]['value'] = $migration->id();
+      if (array_key_exists('data_fetcher_plugin', $migration->source)) {
+        $fetcher_types[$migration->source['data_fetcher_plugin']][]['value'] = $migration->id();
+      }
     }
 
     foreach ($this->dataFetcherPluginManager->getDefinitions() as $id => $data_fetcher) {

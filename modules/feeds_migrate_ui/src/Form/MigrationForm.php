@@ -545,6 +545,13 @@ class MigrationForm extends EntityForm {
   }
 
   /**
+   * Provides a callback for $base_button.
+   */
+  public function multistepSubmit(array &$form, FormStateInterface $form_state) {
+    // TODO What do we do here?
+  }
+
+  /**
    * {@inheritdoc}
    */
   protected function copyFormValuesToEntity(EntityInterface $entity, array $form, FormStateInterface $form_state) {
@@ -722,26 +729,28 @@ class MigrationForm extends EntityForm {
     }
     $source['fields'] = $guid_selector ? [$guid_selector] : [];
 
-    foreach ($values['mapping'] as $field => $field_data) {
-      $selectors = $field_data['selectors']['data'];
+    if (array_key_exists('mapping', $values) && is_array($values['mapping'])) {
+      foreach ($values['mapping'] as $field => $field_data) {
+        $selectors = $field_data['selectors']['data'];
 
-      if (is_string($selectors)) {
-        $source['fields'][] = [
-          'name' => $field,
-          'label' => $field,
-          'selector' => $selectors,
-        ];
-        $process[$field] = $field;
-      }
-      else {
-        foreach ($selectors as $column => $selector) {
+        if (is_string($selectors)) {
           $source['fields'][] = [
-            'name' => "{$field}__$column",
-            'label' => "{$field}__$column",
-            'selector' => $selector,
+            'name' => $field,
+            'label' => $field,
+            'selector' => $selectors,
           ];
+          $process[$field] = $field;
+        }
+        else {
+          foreach ($selectors as $column => $selector) {
+            $source['fields'][] = [
+              'name' => "{$field}__$column",
+              'label' => "{$field}__$column",
+              'selector' => $selector,
+            ];
 
-          $process["$field/$column"] = "{$field}__$column";
+            $process["$field/$column"] = "{$field}__$column";
+          }
         }
       }
     }
@@ -771,6 +780,7 @@ class MigrationForm extends EntityForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     if ($this->currentStep == self::STEP_FINALIZE) {
+      $this->entity->migration_group = 'default';
       return parent::save($form, $form_state);
     }
   }

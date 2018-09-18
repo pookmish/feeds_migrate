@@ -151,6 +151,9 @@ class FeedsMigrateImporter extends ConfigEntityBase implements FeedsMigrateImpor
     if ($this->existing == 2) {
       $this->migration->getIdMap()->prepareUpdate();
     }
+    if (!$this->migration) {
+      return FALSE;
+    }
     return new FeedsMigrateExecutable($this->migration, $messenger);
   }
 
@@ -159,13 +162,14 @@ class FeedsMigrateImporter extends ConfigEntityBase implements FeedsMigrateImpor
    */
   protected function alterFetcher() {
     $fetcher_plugins = \Drupal::service('plugin.manager.feeds_migrate.data_fetcher_form');
-    $source_configuration = $this->migration->getSourceConfiguration();
-
-    foreach ($fetcher_plugins->getDefinitions() as $definition) {
-      if ($definition['parent'] == $source_configuration['data_fetcher_plugin']) {
-        /** @var \Drupal\feeds_migrate\DataFetcherFormInterface $fetcher_instance */
-        $fetcher_instance = $fetcher_plugins->createInstance($definition['id']);
-        $fetcher_instance->alterMigration($this, $this->migration);
+    if ($this->migration) {
+      $source_configuration = $this->migration->getSourceConfiguration();
+      foreach ($fetcher_plugins->getDefinitions() as $definition) {
+        if ($definition['parent'] == $source_configuration['data_fetcher_plugin']) {
+          /** @var \Drupal\feeds_migrate\DataFetcherFormInterface $fetcher_instance */
+          $fetcher_instance = $fetcher_plugins->createInstance($definition['id']);
+          $fetcher_instance->alterMigration($this, $this->migration);
+        }
       }
     }
   }
