@@ -94,6 +94,9 @@ class Import extends ControllerBase {
 
     /** @var FeedsMigrateExecutable $migrate_executable */
     $migrate_executable = $feeds_migrate_importer->getExecutable();
+    if (!$migrate_executable) {
+      return MigrationInterface::RESULT_FAILED;
+    }
     $this->migration = $migrate_executable->getMigration();
     $source = $this->migration->getSourcePlugin();
 
