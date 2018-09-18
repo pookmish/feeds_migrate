@@ -98,6 +98,10 @@ class FeedsMigrateImporterListBuilder extends ConfigEntityListBuilder {
    */
   public function getDefaultOperations(EntityInterface $entity) {
     $operations = parent::getDefaultOperations($entity);
+    if (!$entity->getExecutable()) {
+      unset($operations['edit']);
+      return $operations;
+    }
     $operations['import'] = [
       'title' => t('Import'),
       'weight' => -10,
